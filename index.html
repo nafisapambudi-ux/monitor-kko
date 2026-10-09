@@ -1,0 +1,1449 @@
+<title>Monitor Kelas Olahraga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: ruang kendali sport science — bilah atas berwarna, ringkasan status, grid grafik 2 kolom, tabel prioritas, panel detail atlet */
+:root{
+  /* Satu tema gelap, mengikuti dashboard Excel: latar hitam, panel bergaris putih, aksen oranye */
+  --bg:#000000;--surface:#0e0e0f;--surface2:#19191b;--ink:#f4f4f4;--muted:#a8a8a8;--line:#3b3b3e;
+  --brand:#000000;--brand-ink:#ffffff;--accent:#ff5b0a;--accent-soft:#3b1a08;--accent2:#8d8d8d;
+  --red:#ff4b42;--red-bg:#3e1311;--amber:#ffc000;--amber-bg:#3b2f00;--green:#5cc23a;--green-bg:#16300f;--lime-bg:#1f3313;--gray-bg:#262628;
+  --c1:#e5393a;--c2:#ffb020;--c3:#8a8a8a;--c4:#7cc94f;--c5:#2fa84f;
+  --tile:#4ea72e;--label:#ffc000;--panel-line:#e6e6e6;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;--body:"Barlow",system-ui,sans-serif;
+  --radius:10px;color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;margin:0}
+button{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.topbar{background:var(--brand);color:var(--brand-ink);padding-inline:16px;padding-block:14px 0}
+.topbar .in{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.brandrow{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.75;margin:0}
+h1{font-family:var(--display);font-weight:700;font-size:32px;line-height:1;margin:2px 0 0;letter-spacing:.01em;text-wrap:balance}
+.date{font-size:14px;opacity:.85}
+.tabs{display:flex;gap:2px;overflow-x:auto}
+.tabs button{border:0;background:none;color:var(--brand-ink);opacity:.72;font-weight:600;font-size:15px;padding:10px 16px;border-radius:10px 10px 0 0;cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{background:var(--bg);color:var(--ink);opacity:1}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:18px 56px;display:flex;flex-direction:column;gap:16px}
+h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0;line-height:1.15}
+h3{font-size:12px;font-weight:600;color:var(--muted);margin:0;text-transform:uppercase;letter-spacing:.07em}
+.banner{background:var(--accent-soft);border-radius:10px;padding:10px 14px;font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card .ch{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.card .note{font-size:13px;color:var(--muted);margin:0}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.toolbar .r{display:flex;gap:8px;flex-wrap:wrap}
+select,input[type=text],input[type=number],input[type=date],input[type=search]{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+.btn{font-weight:700;font-size:15px;background:var(--accent);color:#000;border:0;border-radius:9px;padding:10px 18px;cursor:pointer}
+.btn.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn.sm{font-size:14px;padding:8px 12px}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px 12px;display:flex;flex-direction:column;gap:6px;text-align:left;cursor:pointer;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--stripe,var(--accent))}
+.kpi[aria-pressed="true"]{border-color:var(--stripe,var(--accent));box-shadow:inset 0 0 0 1px var(--stripe,var(--accent))}
+.kpi .t{font-size:13px;color:var(--muted);font-weight:500}
+.kpi .n{font-family:var(--display);font-weight:700;font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+.kpi .n small{font-size:20px;color:var(--muted);font-weight:600}
+.kpi .s{font-size:12px;color:var(--muted)}
+.kpi.red{--stripe:var(--red)}.kpi.red .n{color:var(--red)}
+.kpi.amber{--stripe:var(--amber)}.kpi.amber .n{color:var(--amber)}
+.kpi.green{--stripe:var(--green)}.kpi.green .n{color:var(--green)}
+.meter{height:6px;border-radius:3px;background:var(--gray-bg);overflow:hidden}.meter i{display:block;height:100%;background:var(--accent);border-radius:3px}
+/* grids */
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.g3{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+.cv{position:relative;height:230px}.cv.tall{height:290px}.cv.short{height:200px}
+.cv canvas{position:absolute;inset:0}
+.cvmsg{font-size:13px;color:var(--muted);padding:20px 0;text-align:center}
+/* heatmap */
+.hmwrap{overflow-x:auto}
+.hm{display:grid;gap:3px;min-width:520px;font-size:12px}
+.hm .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px;align-self:center;color:var(--ink)}
+.hm .dh{color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.hm .c{height:22px;border-radius:4px;display:grid;place-items:center;font-variant-numeric:tabular-nums;font-size:11px;font-weight:600}
+.c0{background:transparent;outline:1px dashed var(--line);outline-offset:-1px;color:transparent}
+.c1{background:var(--red-bg);color:var(--red)}.c2{background:var(--amber-bg);color:var(--amber)}.c3{background:var(--lime-bg);color:var(--green)}.c4{background:var(--green-bg);color:var(--green)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:14px;height:10px;border-radius:3px;display:inline-block}
+/* table */
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.row{display:grid;grid-template-columns:minmax(0,1.5fr) 108px minmax(0,2fr) 120px 70px 84px 70px;gap:12px;align-items:center;padding:11px 16px;border:0;border-top:1px solid var(--line);background:none;width:100%;text-align:left;cursor:pointer}
+.row:first-child{border-top:0}
+.row.head{cursor:default;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;background:var(--surface2);font-weight:600}
+.row:not(.head):hover{background:var(--surface2)}
+.row.sel{background:var(--accent-soft)}
+.nm{font-weight:600;min-width:0}.nm small{display:block;font-weight:400;color:var(--muted);font-size:13px}
+.num{font-variant-numeric:tabular-nums;text-align:right}
+.why{font-size:13px;color:var(--muted);min-width:0}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.p-merah{background:var(--red-bg);color:var(--red)}.p-kuning{background:var(--amber-bg);color:var(--amber)}.p-hijau{background:var(--green-bg);color:var(--green)}.p-kosong{background:var(--gray-bg);color:var(--muted)}
+.spark{width:70px;height:22px;display:block;margin-left:auto}
+/* detail */
+.dhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:flex-start}
+.avatar{width:46px;height:46px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:20px;flex:none}
+.who{display:flex;gap:12px;align-items:center}
+.sub{color:var(--muted);font-size:14px}
+.metrics{display:grid;grid-template-columns:minmax(230px,1.6fr) repeat(5,minmax(0,1fr));gap:8px}
+.ag{display:block;max-width:100%;height:auto}.agc{display:flex;justify-content:flex-start}
+.m{background:var(--surface2);border-radius:9px;padding:9px 11px}
+.m .v{font-family:var(--display);font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.m .k{font-size:12px;color:var(--muted)}
+.reasons{margin:0;padding-left:18px;font-size:14px}
+.rules{font-size:13px;color:var(--muted);margin:0}.rules b{color:var(--ink)}
+.empty{padding:28px 16px;color:var(--muted);text-align:center}
+/* input */
+.inlayout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+.step{display:flex;gap:10px;align-items:center}
+.step b{width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--surface);display:grid;place-items:center;font-family:var(--display);font-size:16px;flex:none}
+.step.done b{background:var(--green)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:600}
+.chip.small{font-size:13px;padding:4px 10px}
+.wrow{display:grid;grid-template-columns:170px minmax(0,1fr);gap:12px;align-items:center;padding-block:8px;border-top:1px solid var(--line)}
+.wrow:first-of-type{border-top:0}
+.wrow .q{font-weight:600}.wrow .q small{display:block;font-weight:400;color:var(--muted);font-size:13px}
+.five{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.five button{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 2px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:58px}
+.five button .v{font-family:var(--display);font-weight:700;font-size:22px;line-height:1}
+.five button .d{font-size:11px;color:var(--muted);line-height:1.15;text-align:center}
+.five button[data-v="1"][aria-pressed="true"]{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.five button[data-v="2"][aria-pressed="true"]{background:var(--amber-bg);border-color:var(--amber);color:var(--amber)}
+.five button[data-v="3"][aria-pressed="true"]{background:var(--gray-bg);border-color:var(--accent2)}
+.five button[data-v="4"][aria-pressed="true"]{background:var(--lime-bg);border-color:var(--green);color:var(--green)}
+.five button[data-v="5"][aria-pressed="true"]{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.five button[aria-pressed="true"] .d{color:inherit}
+.painrow{display:flex;align-items:center;gap:14px}
+.painrow input[type=range]{flex:1;accent-color:var(--pc,var(--accent));height:28px}
+.bignum{font-family:var(--display);font-weight:700;font-size:40px;line-height:1;min-width:56px;text-align:center;font-variant-numeric:tabular-nums}
+.ladder{display:flex;flex-direction:column-reverse;gap:3px}
+.ladder button{display:grid;grid-template-columns:34px minmax(0,1fr);align-items:center;gap:10px;border:1px solid transparent;border-radius:8px;padding:5px 10px;cursor:pointer;text-align:left;background:color-mix(in srgb,var(--rc) 38%,var(--surface2))}
+.ladder button b{font-family:var(--display);font-size:20px;text-align:center}
+.ladder button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);font-weight:600}
+.durrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.durrow input{width:110px;font-family:var(--display);font-size:24px;font-weight:600;text-align:center;padding:6px}
+.stepbtn{width:40px;height:40px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:20px;cursor:pointer}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.summary{position:sticky;top:12px;display:flex;flex-direction:column;gap:12px}
+.gauge{display:block;width:100%;max-width:240px;margin:0 auto}
+.sumrow{display:flex;justify-content:space-between;font-size:14px;padding-block:6px;border-top:1px solid var(--line)}
+.sumrow b{font-variant-numeric:tabular-nums}
+.msg{font-size:14px;min-height:1.2em;margin:0}.msg.err{color:var(--red)}.msg.ok{color:var(--green)}
+.search{width:100%}
+/* home & login */
+.home{min-height:100vh;background:var(--brand);color:var(--brand-ink);padding-inline:16px;padding-block:40px;display:flex;align-items:center}
+.home-in{max-width:1080px;margin:0 auto;width:100%;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,420px);gap:40px;align-items:center}
+.hero{position:relative;display:flex;flex-direction:column;gap:16px;padding-block:8px}
+.track{display:flex;flex-direction:column;gap:7px;width:180px}
+.track i{display:block;height:2px;background:var(--brand-ink);opacity:.22;border-radius:1px}
+.track i:nth-child(3){opacity:1;width:62%;background:#ff5b0a}
+.hero-t{font-size:clamp(40px,7vw,68px);line-height:.95;margin:0;font-weight:700;letter-spacing:.005em}
+.lead{font-size:17px;line-height:1.6;max-width:56ch;margin:0;opacity:.9}
+.feats{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:14px;max-width:560px}
+.feats li{display:grid;grid-template-columns:28px minmax(0,1fr);column-gap:12px;align-items:start}
+.feats li::before{content:"";grid-row:1/3;width:28px;height:28px;border-radius:8px;border:1.5px solid #ff5b0a;background:linear-gradient(transparent 46%,#ff5b0a 46%,#ff5b0a 54%,transparent 54%)}
+.feats b{font-family:var(--display);font-size:19px;font-weight:600;letter-spacing:.01em}
+.feats span{opacity:.8;font-size:14px}
+.login{color:var(--ink);gap:16px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.login h2{font-size:28px}
+.fine{font-size:12px;color:var(--muted);margin:0;border-top:1px solid var(--line);padding-top:12px}
+.acct{display:flex;gap:14px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface2)}
+.acct img{width:52px;height:52px;border-radius:50%;flex:none}
+.acct .n{font-weight:600;font-size:16px}
+.acct .e{font-size:14px;color:var(--muted);word-break:break-all}
+.btn.block{width:100%;padding:13px 18px;font-size:16px}
+.alert{border-radius:10px;padding:12px 14px;font-size:14px;background:var(--amber-bg);color:var(--ink)}
+.alert b{color:var(--amber)}
+.rolepick{display:grid;gap:8px}
+.rolepick button{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:11px 14px;cursor:pointer}
+.rolepick button:hover{border-color:var(--accent)}
+.rolepick button span{font-size:13px;color:var(--muted)}
+.who-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+.uchip{display:inline-flex;align-items:center;gap:8px;font-size:14px;background:rgba(255,255,255,.1);border-radius:999px;padding:3px 12px 3px 3px}
+.uchip img{width:26px;height:26px;border-radius:50%}
+.uchip small{opacity:.75}
+.out{border:1px solid rgba(255,255,255,.35);background:none;color:var(--brand-ink);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:14px}
+.drop{position:absolute;top:100%;left:0;right:0;z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-top:4px;box-shadow:0 12px 30px rgba(0,0,0,.15);overflow:hidden;font-weight:400}
+.drop button{display:flex;gap:10px;align-items:center;width:100%;border:0;background:none;padding:9px 12px;cursor:pointer;text-align:left}
+.drop button:hover,.drop button:focus-visible{background:var(--surface2)}
+.drop img{width:28px;height:28px;border-radius:50%}
+.drop small{display:block;color:var(--muted);font-size:12px}
+.prow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.9fr) minmax(0,1.6fr) auto;gap:12px;align-items:center;padding:11px 16px;border-top:1px solid var(--line)}
+.prow:first-child{border-top:0}
+.prow .p{display:flex;gap:10px;align-items:center;min-width:0}.prow .p img{width:32px;height:32px;border-radius:50%;flex:none}
+.prow .p div{min-width:0}.prow .p small{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis}
+.prow.head{background:var(--surface2);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.r-admin{background:var(--accent-soft);color:var(--accent)}.r-pelatih{background:var(--green-bg);color:var(--green)}.r-guru{background:var(--gray-bg);color:var(--muted)}
+@media (max-width:860px){.home-in{grid-template-columns:minmax(0,1fr);gap:28px}.home{padding-block:28px}.prow{grid-template-columns:minmax(0,1fr) auto}.prow.head{display:none}}
+/* dashboard atlet (gaya lembar Excel) */
+.xhead{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto minmax(0,1.1fr);gap:22px;align-items:center;background:#000;border:1px solid var(--panel-line);border-radius:6px;padding:18px}
+.xcol{display:flex;flex-direction:column;gap:7px}
+.xf{display:grid;grid-template-columns:96px 10px minmax(0,1fr) 22px;align-items:center;gap:6px;font-size:13px}
+.xl{background:#fff;color:#000;font-weight:600;padding:3px 8px;border-radius:2px;font-size:12px}
+.xc{color:#fff;text-align:center}
+.xv{background:#fff;color:#000;font-weight:700;padding:3px 8px;border-radius:2px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xv.req{color:#777;font-weight:500;font-style:italic}
+.xu{color:#fff;font-weight:700;font-size:12px}
+.xbmi{display:flex;gap:10px;align-items:center;color:#fff}
+.xbmi div{display:flex;flex-direction:column}.xbmi b{font-family:var(--display);font-size:30px;line-height:1}.xbmi small{font-size:11px;color:var(--muted);max-width:120px}
+.xtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.xtile{display:flex;flex-direction:column;align-items:stretch;text-align:center}
+.xtile b{background:var(--tc,var(--tile));color:#fff;font-family:var(--display);font-size:34px;font-weight:700;padding:10px 4px;line-height:1}
+.xtile.alt b{background:#2f6f1d}
+.xtile span{background:var(--label);color:#000;font-size:11px;font-weight:700;padding:3px 4px}
+.xgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.xpanel{background:#000;border:1px solid var(--panel-line);border-radius:4px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.xpanel h3{color:#fff}
+.rpeleg{display:flex;flex-direction:column;gap:4px}
+.rpeleg div{display:grid;grid-template-columns:84px minmax(0,1fr) 46px;gap:4px;align-items:stretch}
+.rpeleg .rn{color:#fff;font-family:var(--display);font-weight:700;font-size:20px;text-align:center;border-radius:3px;padding:3px 0}
+.rpeleg .rl{background:#ff5b0a;color:#fff;font-family:var(--display);font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:.03em;display:grid;place-items:center}
+.rpeleg .re{background:#000;border:1px solid #333;display:grid;place-items:center;font-size:22px}
+.hrz{display:flex;flex-direction:column;gap:6px}
+.hrz div{display:grid;grid-template-columns:40px minmax(0,1fr);gap:10px;align-items:center}
+.hrz .zc{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#111;border:2px solid #111;box-shadow:0 0 0 1px #555}
+.hrz .zt{border:1px solid;border-left-width:6px;border-radius:6px;padding:6px 10px;display:flex;flex-direction:column}
+.hrz .zt b{font-size:14px}.hrz .zt small{color:var(--muted);font-size:12px}
+.atbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.atbar select{min-width:240px}
+.norm{display:flex;flex-wrap:wrap;gap:3px;align-items:center;font-size:11px}
+.norm .nlab{width:100%;color:var(--muted);font-size:11px}
+.norm .nb{font-style:normal;display:inline-flex;gap:4px;align-items:center;border-radius:4px;padding:2px 6px;font-variant-numeric:tabular-nums}
+.norm .nb b{font-weight:700}
+.nb.s5,.sk.s5{background:var(--green-bg);color:var(--green)}.nb.s4,.sk.s4{background:var(--lime-bg);color:var(--c4)}.nb.s3,.sk.s3{background:var(--gray-bg);color:var(--ink)}.nb.s2,.sk.s2{background:var(--amber-bg);color:var(--amber)}.nb.s1,.sk.s1{background:var(--red-bg);color:var(--red)}
+.sk{padding:1px 6px;border-radius:4px}
+@media (max-width:1000px){.xhead{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.xtiles{grid-column:1/-1}}
+@media (max-width:760px){.xhead{grid-template-columns:minmax(0,1fr)}.xgrid{grid-template-columns:minmax(0,1fr)}.xf{grid-template-columns:86px 8px minmax(0,1fr) 22px}}
+.lgform{display:flex;flex-direction:column;gap:12px}
+.lgform input{padding:11px 12px;font-size:15px}
+.lnks{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.lnk{border:0;background:none;color:var(--accent);cursor:pointer;padding:4px 0;font-size:14px;font-weight:600;text-align:left}
+.lnk:hover{text-decoration:underline}
+.prow select{min-width:0}
+/* tes fisik */
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:7px 14px;border-radius:7px;cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.fl{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:14px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.tf{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:var(--surface2)}
+.tf .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.tf .lab{font-weight:600;font-size:14px}
+.tf .komp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);font-weight:600}
+.tf .inp{display:flex;align-items:center;gap:8px}
+.tf .inp input{flex:1;font-family:var(--display);font-size:22px;font-weight:600;padding:6px 10px;min-width:0}
+.tf .inp span{color:var(--muted);font-size:13px;width:34px}
+.tf .hint{font-size:12px;color:var(--muted)}
+.tf .prev{font-size:12px;color:var(--muted)}.tf .prev b{color:var(--ink)}
+.up{color:var(--green);font-weight:600}.down{color:var(--red);font-weight:600}.flat{color:var(--muted)}
+.tm{border-collapse:separate;border-spacing:3px;font-size:13px;min-width:720px;width:100%}
+.tm th{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:4px;text-align:center;vertical-align:bottom}
+.tm th.nmh{text-align:left}
+.tm td{padding:5px 6px;text-align:center;border-radius:5px;font-variant-numeric:tabular-nums}
+.tm td.nmc{text-align:left;padding-left:0;white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
+.tm td.nmc button{border:0;background:none;padding:0;cursor:pointer;font-weight:600;text-align:left}
+.tm td.nmc button:hover{color:var(--accent)}
+.tm td small{display:block;font-size:10px;opacity:.85}
+.k0{background:transparent;outline:1px dashed var(--line);outline-offset:-1px;color:var(--muted)}
+.k1{background:var(--red-bg);color:var(--red)}.k2{background:var(--amber-bg);color:var(--amber)}.k3{background:var(--gray-bg);color:var(--ink)}.k4{background:var(--lime-bg);color:var(--green)}.k5{background:var(--green-bg);color:var(--green)}
+.legend i.k1,.legend i.k2,.legend i.k3,.legend i.k4,.legend i.k5{outline:none}
+.ptable{width:100%;border-collapse:collapse;font-size:14px}
+.ptable th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.ptable td{padding:7px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.ptable td.r,.ptable th.r{text-align:right}
+@media (max-width:980px){.inlayout{grid-template-columns:minmax(0,1fr)}.summary{position:static}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metrics>.m:first-child{grid-column:1/-1}}
+@media (max-width:820px){.g2,.g3{grid-template-columns:minmax(0,1fr)}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.two{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:720px){
+  .row{grid-template-columns:minmax(0,1fr) auto;row-gap:4px}
+  .row.head{display:none}.row .why{grid-column:1/-1}.row .num,.row .sp{display:none}
+  .wrow{grid-template-columns:minmax(0,1fr)}
+  .five button .d{font-size:10px}
+}
+@media (prefers-reduced-motion:no-preference){.row,.kpi,.chip,.five button,.ladder button{transition:background .15s,border-color .15s}}
+</style>
+
+<div id="home" class="home">
+  <div class="home-in">
+    <section class="hero">
+      <div class="track" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <p class="eyebrow">Sistem monitoring atlet pelajar</p>
+      <h1 class="hero-t">Monitor Kelas Olahraga</h1>
+      <p class="lead">Pantau beban latihan, kondisi harian, dan perkembangan fisik setiap siswa kelas khusus olahraga dalam satu tempat, dengan peringatan dini sebelum kelelahan berubah menjadi cedera.</p>
+      <ul class="feats">
+        <li><b>Beban &amp; wellness harian</b><span>sRPE, ACWR, monotony, dan skor wellness dibandingkan dengan baseline tiap siswa.</span></li>
+        <li><b>Tes kondisi fisik</b><span>9 tes per semester, T-score per jenis kelamin, dan progres antar-sesi.</span></li>
+        <li><b>Status merah · kuning · hijau</b><span>Daftar prioritas otomatis untuk pelatih dan sport scientist.</span></li>
+      </ul>
+    </section>
+    <section class="login card" aria-live="polite">
+      <h2>Masuk</h2>
+      <div id="loginBody"><p class="sub">Memeriksa akun…</p></div>
+      <p class="fine">Data siswa bersifat rahasia dan hanya dipakai untuk pembinaan atlet. Akses diberikan oleh pengelola program.</p>
+    </section>
+  </div>
+</div>
+
+<div id="app" hidden>
+<div class="topbar">
+  <div class="in">
+    <div class="brandrow">
+      <div>
+        <p class="eyebrow">Sport science · Kelas khusus olahraga</p>
+        <h1>Monitor Kelas Olahraga</h1>
+      </div>
+      <div class="who-bar"><span class="date" id="today"></span><span class="uchip" id="uchip"></span><button type="button" class="out" id="btnOut">Keluar</button></div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="atlet" id="tab-atlet">Dashboard atlet</button>
+      <button role="tab" aria-selected="false" data-tab="dash" id="tab-dash">Ringkasan kelas</button>
+      <button role="tab" aria-selected="false" data-tab="input" id="tab-input">Input harian</button>
+      <button role="tab" aria-selected="false" data-tab="tes" id="tab-tes">Tes fisik</button>
+      <button role="tab" aria-selected="false" data-tab="siswa" id="tab-siswa">Data siswa</button>
+      <button role="tab" aria-selected="false" data-tab="akses" id="tab-akses" hidden>Pengguna</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="banner" id="banner" hidden></div>
+
+  <!-- DASHBOARD ATLET -->
+  <section id="v-atlet" style="display:flex;flex-direction:column;gap:12px">
+    <div class="atbar"><h2>Dashboard atlet</h2><select id="atPick" aria-label="Pilih atlet"></select></div>
+    <div id="atletBody" style="display:flex;flex-direction:column;gap:12px"></div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="v-dash" hidden style="display:flex;flex-direction:column;gap:16px">
+    <div class="toolbar">
+      <h2 id="scopeTitle">Ringkasan hari ini</h2>
+      <div class="r">
+        <select id="fCabor" aria-label="Filter cabang olahraga"></select>
+        <button class="btn ghost sm" id="btnCsv" hidden>Unduh CSV</button>
+      </div>
+    </div>
+    <div class="kpis" id="kpis"></div>
+
+    <div class="g3">
+      <div class="card">
+        <div class="ch"><h3>Matriks risiko</h3><span class="note">Tiap titik = satu siswa</span></div>
+        <div class="cv tall"><canvas id="cRisk" aria-label="Matriks risiko ACWR terhadap wellness"></canvas></div>
+        <div class="legend"><span><i style="background:var(--green-bg);outline:1px solid var(--green)"></i>Zona aman: ACWR 0,8–1,3 dan z ≥ −1</span><span><i style="background:var(--red-bg);outline:1px solid var(--red)"></i>Zona bahaya: ACWR &gt; 1,5 atau z &lt; −2</span></div>
+      </div>
+      <div class="card">
+        <div class="ch"><h3>Status per cabor</h3></div>
+        <div class="cv tall"><canvas id="cCabor" aria-label="Distribusi status per cabang olahraga"></canvas></div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="ch"><h3>Rata-rata beban harian kelas</h3><span class="note">sRPE (AU), 28 hari</span></div>
+        <div class="cv"><canvas id="cLoad" aria-label="Rata-rata beban harian kelas"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ch"><h3>Rata-rata wellness kelas</h3><span class="note">Skor 5–25, 28 hari</span></div>
+        <div class="cv"><canvas id="cWell" aria-label="Rata-rata skor wellness kelas"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><h3>ACWR seluruh siswa</h3><span class="note">Hijau 0,8–1,3 aman · kuning waspada · merah &gt; 1,5 bahaya. Klik batang untuk profil.</span></div>
+      <div class="cv" id="acwrBox"><canvas id="cAcwrAll" aria-label="ACWR tiap siswa"></canvas></div>
+      <p class="note" id="acwrNote"></p>
+    </div>
+
+    <div class="card">
+      <div class="ch"><h3>Peta wellness 14 hari</h3><span class="note">Angka = skor total wellness. Kotak putus-putus = tidak mengisi.</span></div>
+      <div class="hmwrap"><div class="hm" id="heat"></div></div>
+      <div class="legend"><span><i class="c1"></i>≤ 10 rendah</span><span><i class="c2"></i>11–13 agak rendah</span><span><i class="c3"></i>14–17 cukup</span><span><i class="c4"></i>≥ 18 baik</span></div>
+    </div>
+
+    <div class="toolbar"><h2 id="listTitle">Daftar prioritas</h2><span class="sub">Klik nama untuk melihat profil lengkap</span></div>
+    <div class="list" id="list"></div>
+    <div class="card" id="detail" hidden></div>
+
+    <p class="rules"><b>Aturan status.</b> Merah: nyeri ≥3 di 3 entri berturut-turut, ACWR &gt;1,5, z-wellness &lt; −2, atau z &lt; −1 tiga entri berturut-turut. Kuning: ACWR 1,3–1,5 atau &lt;0,8, z-wellness &lt; −1, monotony &gt;2, nyeri ≥3 hari ini, atau pertumbuhan tinggi ≥7 cm/tahun. Sebelum ada 7 entri baseline, wellness memakai ambang total ≤10 (merah) dan ≤13 (kuning). ACWR dihitung dari beban 7 hari ÷ rata-rata mingguan 28 hari. Semua ambang adalah titik awal dan perlu dikalibrasi.</p>
+  </section>
+
+  <!-- INPUT -->
+  <section id="v-input" hidden>
+    <form id="formEntri" novalidate class="inlayout">
+      <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+        <div class="card">
+          <div class="step" id="st1"><b>1</b><h2>Siapa yang mengisi?</h2></div>
+          <div class="two">
+            <input type="search" id="inCari" class="search" placeholder="Cari nama…" aria-label="Cari nama siswa" autocomplete="off">
+            <input type="date" id="inTgl" aria-label="Tanggal">
+          </div>
+          <div class="chips" id="inCabor" aria-label="Filter cabor"></div>
+          <div class="chips" id="inSiswa" role="group" aria-label="Pilih siswa"></div>
+        </div>
+
+        <div class="card">
+          <div class="step" id="st2"><b>2</b><h2>Kondisi pagi ini</h2></div>
+          <p class="note">Pilih angka yang paling menggambarkan kondisimu. 1 = paling buruk, 5 = paling baik.</p>
+          <div id="wellBox"></div>
+        </div>
+
+        <div class="card">
+          <div class="step" id="st3"><b>3</b><h2>Nyeri otot atau sendi</h2></div>
+          <div class="painrow">
+            <span class="bignum" id="nyeriVal">0</span>
+            <input type="range" id="inNyeri" min="0" max="10" step="1" value="0" aria-label="Skala nyeri 0 sampai 10">
+          </div>
+          <div class="ends" style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>0 · tidak ada</span><span>5 · mengganggu</span><span>10 · sangat nyeri</span></div>
+          <div id="areaBox" hidden style="display:flex;flex-direction:column;gap:6px">
+            <span class="note">Bagian yang terasa nyeri</span>
+            <div class="chips" id="inArea"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="step" id="st4"><b>4</b><h2>Latihan hari ini</h2></div>
+          <div class="two">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span class="note">Seberapa berat latihan secara keseluruhan? (skala CR-10)</span>
+              <div class="ladder" id="inRpe" role="group" aria-label="RPE sesi"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <span class="note">Durasi total latihan (menit)</span>
+                <div class="durrow">
+                  <button type="button" class="stepbtn" data-d="-10" aria-label="Kurangi 10 menit">−</button>
+                  <input type="number" id="inDur" min="0" max="400" inputmode="numeric" placeholder="0" aria-label="Durasi menit">
+                  <button type="button" class="stepbtn" data-d="10" aria-label="Tambah 10 menit">+</button>
+                </div>
+                <div class="chips" id="durQuick"></div>
+              </div>
+              <label style="display:flex;flex-direction:column;gap:6px"><span class="note">Tinggi badan (cm), opsional, cukup sebulan sekali</span><input type="number" id="inTinggi" min="100" max="230" step="0.1" inputmode="decimal" placeholder="mis. 168,5"></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="card summary">
+        <h3>Ringkasan entri</h3>
+        <div id="sumWho" class="sub">Belum memilih siswa</div>
+        <svg class="gauge" id="gauge" viewBox="0 0 240 140" role="img" aria-label="Skor wellness"></svg>
+        <div class="sumrow"><span>Beban sesi (RPE × menit)</span><b id="sumLoad">–</b></div>
+        <div class="sumrow"><span>Nyeri</span><b id="sumNyeri">0/10</b></div>
+        <div class="sumrow"><span>Kelengkapan</span><b id="sumDone">0/4</b></div>
+        <div id="sumFlag"></div>
+        <button class="btn" type="submit">Simpan entri</button>
+        <p class="msg" id="msgEntri" role="status"></p>
+        <p class="note">Status akhir dihitung dari riwayat 28 hari, bukan dari satu entri ini saja.</p>
+      </aside>
+    </form>
+  </section>
+
+  <!-- TES FISIK -->
+  <section id="v-tes" hidden style="display:flex;flex-direction:column;gap:16px">
+    <div class="toolbar">
+      <div class="seg" role="tablist" aria-label="Bagian tes fisik">
+        <button type="button" data-sub="analisis" aria-pressed="true">Analisis</button>
+        <button type="button" data-sub="input" aria-pressed="false">Input hasil tes</button>
+      </div>
+      <div class="r" id="tesFilters">
+        <select id="tJk" aria-label="Filter jenis kelamin"><option value="">Putra &amp; putri</option><option value="L">Putra</option><option value="P">Putri</option></select>
+        <select id="tCabor" aria-label="Filter cabor tes"></select>
+        <button class="btn ghost sm" id="btnCsvTes" hidden>Unduh CSV tes</button>
+      </div>
+    </div>
+
+    <div id="tesAnalisis" style="display:flex;flex-direction:column;gap:16px">
+      <div class="kpis" id="tesKpis"></div>
+
+      <div class="g3">
+        <div class="card">
+          <div class="ch"><h3>Peringkat per tes</h3><select id="tTest" aria-label="Pilih tes"></select></div>
+          <div class="cv tall" id="rankBox"><canvas id="cRank" aria-label="Peringkat hasil tes"></canvas></div>
+          <p class="note" id="rankNote"></p>
+        </div>
+        <div class="card">
+          <div class="ch"><h3>Sebaran kategori per tes</h3><span class="note">% siswa di tiap skala norma</span></div>
+          <div class="cv tall"><canvas id="cKomp" aria-label="Sebaran kategori per tes"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><h3>Matriks kategori kondisi fisik</h3><span class="note">Tes terakhir tiap siswa: nilai dan skala (S1–S5). Klik nama untuk profil.</span></div>
+        <div class="hmwrap"><table class="tm" id="tesMatrix"></table></div>
+        <div class="legend"><span><i class="k1"></i>Skala 1 · kurang sekali</span><span><i class="k2"></i>Skala 2 · kurang</span><span><i class="k3"></i>Skala 3 · sedang</span><span><i class="k4"></i>Skala 4 · baik</span><span><i class="k5"></i>Skala 5 · baik sekali</span></div>
+      </div>
+
+      <div class="card" id="tesProfil"></div>
+
+      <p class="rules"><b>Cara membaca.</b> Setiap hasil diberi skala 1–5 menurut norma tes fisik (putra dan putri berbeda; sit-up, wall sit, dan sit and reach sama). Half squat, bench press, dan deadlift dinilai sebagai kelipatan berat badan. Performa fisik = rata-rata skala ÷ 5 × 100%. Estimasi VO₂max dari Yo-Yo IR1 memakai rumus Bangsbo: jarak × 0,0084 + 36,4. Sebagian norma (terutama 1RM) disusun untuk atlet dewasa sehingga terasa berat bagi siswa SMA.</p>
+    </div>
+
+    <form id="formTes" class="card" novalidate hidden>
+      <h2>Input hasil tes</h2>
+      <div class="two" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+        <label class="fl">Nama siswa<select id="tsSiswa"></select></label>
+        <label class="fl">Tanggal tes<input type="date" id="tsTgl"></label>
+        <label class="fl">Sesi<select id="tsSesi"></select></label>
+        <label class="fl">Berat badan saat tes (kg)<input type="number" id="tsBb" min="25" max="200" step="0.1" inputmode="decimal" placeholder="untuk tes 1RM"></label>
+      </div>
+      <p class="note" id="tsPrev">Pilih siswa untuk melihat hasil tes sebelumnya. Isi hanya tes yang dilakukan; kolom kosong dilewati. Untuk tes dengan beberapa percobaan, isi hasil terbaik.</p>
+      <div class="tgrid" id="tsFields"></div>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <button class="btn" type="submit">Simpan hasil tes</button>
+        <p class="msg" id="msgTes" role="status"></p>
+      </div>
+    </form>
+  </section>
+
+  <!-- AKSES -->
+  <section id="v-akses" hidden style="display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <h2>Pengguna &amp; peran</h2>
+      <p class="note">Pelatih dan guru mendaftar sendiri lewat halaman masuk (tombol <b>Daftar</b>) memakai email mereka. Akun baru berstatus <b>menunggu</b> sampai Anda menetapkan perannya di sini. Pelatih hanya melihat dan mengisi data siswa dari cabor yang Anda pilih.</p>
+      <p class="sub" id="aPending"></p>
+      <p class="msg" id="msgAkses" role="status"></p>
+    </div>
+    <div class="list" id="aList"></div>
+    <p class="rules"><b>Keamanan.</b> Peran juga diterapkan di database: pelatih tidak bisa membaca data siswa di luar cabornya, dan guru tidak bisa mengubah data apa pun, meskipun mencoba lewat cara lain.</p>
+  </section>
+
+  <!-- SISWA -->
+  <section id="v-siswa" hidden style="display:flex;flex-direction:column;gap:16px">
+    <form class="card" id="formSiswa" novalidate>
+      <h2 id="siswaFormTitle">Tambah siswa</h2>
+      <div class="two" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+        <label class="fl">Nama lengkap<input type="text" id="sNama" autocomplete="off"></label>
+        <label class="fl">Cabang olahraga<input type="text" id="sCabor" list="caborList" autocomplete="off"></label>
+        <label class="fl">Pelatih<input type="text" id="sPelatih" autocomplete="off" placeholder="Nama pelatih cabor"></label>
+        <label class="fl">Kelas<input type="text" id="sKelas" placeholder="mis. X-KKO" autocomplete="off"></label>
+        <label class="fl">Gender<select id="sJk"><option value="">Pilih…</option><option value="L">Pria</option><option value="P">Wanita</option></select></label>
+        <label class="fl">Tanggal lahir<input type="date" id="sLahir"></label>
+        <label class="fl">Berat badan (kg)<input type="number" id="sBb" min="25" max="200" step="0.1" inputmode="decimal"></label>
+        <label class="fl">Tinggi badan (m)<input type="number" id="sTb" min="1" max="2.3" step="0.01" inputmode="decimal" placeholder="mis. 1,68"></label>
+      </div>
+      <datalist id="caborList"></datalist>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" type="submit" id="siswaSubmit">Tambah siswa</button><button class="btn ghost" type="button" id="siswaCancel" hidden>Batal</button></div>
+      <p class="msg" id="msgSiswa" role="status"></p>
+    </form>
+    <div class="list" id="siswaList"></div>
+  </section>
+</div>
+
+</div>
+
+<script>
+/* =====================================================================
+   KONFIGURASI — isi dua nilai di bawah dari Supabase:
+   Project Settings → API → "Project URL" dan "anon public key".
+   Selama dibiarkan kosong, aplikasi berjalan dalam mode contoh.
+   ===================================================================== */
+window.MONITOR_CONFIG={
+  supabaseUrl:"",
+  supabaseAnonKey:""
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const WELL=[["tidur","Kualitas tidur","Semalam",["Sangat buruk","Buruk","Biasa","Nyenyak","Sangat nyenyak"]],["lelah","Tingkat energi","Rasa lelah",["Sangat lelah","Lelah","Biasa","Segar","Sangat segar"]],["otot","Kondisi otot","Pegal / kaku",["Sangat pegal","Pegal","Biasa","Ringan","Tidak pegal"]],["stres","Tingkat stres","Sekolah & rumah",["Sangat stres","Stres","Biasa","Tenang","Sangat tenang"]],["mood","Suasana hati","Hari ini",["Sangat buruk","Kurang","Biasa","Baik","Sangat baik"]]];
+const RPE=["Istirahat","Intensitas sangat ringan","Intensitas sangat ringan","Intensitas ringan","Intensitas ringan","Intensitas sedang","Intensitas sedang","Intensitas berat","Intensitas berat","Intensitas maksimal","Intensitas maksimal"];
+const RPE_EMO=["","😄","😊","😌","😔","😐","😬","😧","🥴","😵‍💫","🤮"];
+const TSS_JAM=[0,20,30,40,50,60,70,80,100,120,140];
+const RPE_BAND=[[1,2,"Intensitas sangat ringan","#8c8c8c"],[3,4,"Intensitas ringan","#2e9fd8"],[5,6,"Intensitas sedang","#3d9a4a"],[7,8,"Intensitas berat","#e0a800"],[9,10,"Intensitas maksimal","#c8323a"]];
+const rpeColor=v=>{const b=RPE_BAND.find(x=>v>=x[0]&&v<=x[1]);return b?b[3]:"#555"};
+/* Norma 1–5 dari lembar "Tes Pengukuran". cut = batas skala 5,4,3,2.
+   dir -1: lebih kecil lebih baik (v<c5 → 5, v≤c4 → 4, v≤c3 → 3, v≤c2 → 2, selain itu 1)
+   dir +1: lebih besar lebih baik (v>c5 → 5, v≥c4 → 4, v≥c3 → 3, v≥c2 → 2, selain itu 1)
+   rel: hasil dibagi berat badan (× BB) sebelum dibandingkan. */
+const TESTS=[
+  {key:"sprint30",label:"Sprint 30 m",short:"Sprint 30 m",unit:"detik",dir:-1,min:3,max:9,step:0.01,komp:"Kecepatan",norm:{L:[4.0,4.3,4.7,5.1],P:[4.5,4.8,5.2,5.6]},nt:"detik",hint:"Start berdiri, ambil waktu terbaik dari 2 percobaan."},
+  {key:"ttest",label:"T-Test (agility)",short:"T test",unit:"detik",dir:-1,min:7,max:20,step:0.01,komp:"Kelincahan",norm:{L:[9.5,10.5,11.5,12.5],P:[10.5,11.5,12.5,13.5]},nt:"detik",hint:"Waktu terbaik dari 2 percobaan."},
+  {key:"cone3",label:"3 Cone Drill",short:"3 Cone Drill",unit:"detik",dir:-1,min:5,max:16,step:0.01,komp:"Kelincahan",norm:{L:[7.5,8.0,9.0,10.0],P:[8.5,9.0,10.0,11.0]},nt:"detik",hint:"Waktu terbaik dari 2 percobaan."},
+  {key:"yoyo",label:"Yo-Yo Intermittent Recovery L1",short:"Yo-Yo Intermittent",unit:"meter",dir:1,min:0,max:4000,step:40,komp:"Daya tahan",norm:{L:[2000,1800,1500,1000],P:[1500,1300,1000,700]},nt:"meter",hint:"Total jarak tempuh (kelipatan 40 m)."},
+  {key:"squat",label:"Half Squat (1RM)",short:"Half Squat",unit:"kg",dir:1,min:10,max:400,step:0.5,komp:"Kekuatan maksimal",rel:true,norm:{L:[2.0,1.8,1.5,1.2],P:[1.5,1.3,1.0,0.8]},nt:"× BB",hint:"Isi beban 1RM dalam kg; dinilai sebagai kelipatan berat badan."},
+  {key:"bench",label:"Bench Press (1RM)",short:"Bench Press",unit:"kg",dir:1,min:5,max:300,step:0.5,komp:"Kekuatan maksimal",rel:true,norm:{L:[1.5,1.3,1.0,0.8],P:[1.0,0.8,0.6,0.4]},nt:"× BB",hint:"Isi beban 1RM dalam kg."},
+  {key:"deadlift",label:"Deadlift (1RM)",short:"Deadlift",unit:"kg",dir:1,min:10,max:400,step:0.5,komp:"Kekuatan maksimal",rel:true,norm:{L:[2.5,2.0,1.5,1.2],P:[2.0,1.8,1.5,1.2]},nt:"× BB",hint:"Isi beban 1RM dalam kg."},
+  {key:"vj",label:"Vertical Jump",short:"Vertical Jump",unit:"cm",dir:1,min:5,max:120,step:0.5,komp:"Power",norm:{L:[70,60,50,40],P:[50,40,30,20]},nt:"cm",hint:"Selisih raihan lompat dan raihan berdiri."},
+  {key:"pushup",label:"Push-Up (60 detik)",short:"Push Up",unit:"kali",dir:1,min:0,max:120,step:1,komp:"Daya tahan otot",norm:{L:[50,40,30,20],P:[35,30,20,10]},nt:"kali",hint:"Repetisi benar dalam 60 detik."},
+  {key:"situp",label:"Sit-Up (60 detik)",short:"Sit Up",unit:"kali",dir:1,min:0,max:120,step:1,komp:"Daya tahan otot",norm:{L:[55,45,35,25],P:[55,45,35,25]},nt:"kali",hint:"Repetisi benar dalam 60 detik."},
+  {key:"wallsit",label:"Wall Sit (statik, waktu maksimal)",short:"Wall Sit",unit:"detik",dir:1,min:0,max:600,step:1,komp:"Daya tahan otot",norm:{L:[120,90,60,30],P:[120,90,60,30]},nt:"detik",hint:"Waktu bertahan sampai posisi lutut 90° tidak terjaga."},
+  {key:"sitreach",label:"Sit and Reach (fleksibilitas)",short:"Sit and Reach Test",unit:"cm",dir:1,min:-20,max:60,step:0.5,komp:"Fleksibilitas",norm:{L:[35,25,15,5],P:[35,25,15,5]},nt:"cm",hint:"Jangkauan terjauh dari 3 percobaan."}
+];
+const KOMP=[...new Set(TESTS.map(t=>t.komp))];
+const AREAS=["Lutut","Pergelangan kaki","Betis","Paha belakang","Paha depan","Pinggul","Punggung bawah","Bahu","Siku / pergelangan tangan","Lainnya"];
+const SKALA=["","Kurang sekali","Kurang","Sedang","Baik","Baik sekali"];
+function skalaOf(t,v,jk,bb){
+  if(v==null||v===""||!isFinite(+v))return null;
+  let x=+v;if(t.rel){if(!bb)return null;x=x/bb}
+  const c=t.norm[jk==="P"?"P":"L"];
+  if(t.dir<0){if(x<c[0])return 5;if(x<=c[1])return 4;if(x<=c[2])return 3;if(x<=c[3])return 2;return 1}
+  if(x>c[0])return 5;if(x>=c[1])return 4;if(x>=c[2])return 3;if(x>=c[3])return 2;return 1;
+}
+function normText(t,jk){const c=t.norm[jk==="P"?"P":"L"];const f=v=>String(v).replace(".",",");return t.dir<0?[`< ${f(c[0])}`,`${f(c[0])}–${f(c[1])}`,`${f(c[1])}–${f(c[2])}`,`${f(c[2])}–${f(c[3])}`,`> ${f(c[3])}`]:[`> ${f(c[0])}`,`${f(c[1])}–${f(c[0])}`,`${f(c[2])}–${f(c[1])}`,`${f(c[3])}–${f(c[2])}`,`< ${f(c[3])}`]}
+const SESI=["Awal semester","Tengah semester","Akhir semester","Tes tambahan"];
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parse=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c)};
+const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return iso(d)};
+const diffDays=(a,b)=>Math.round((parse(a)-parse(b))/864e5);
+const TODAY=iso(new Date());
+const dec=(v,d=2)=>v==null||!isFinite(v)?"–":v.toFixed(d).replace(".",",");
+const fmtD=s=>parse(s).toLocaleDateString("id-ID",{day:"numeric",month:"short"});
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const initials=n=>n.replace(/\(.*?\)/g,"").trim().split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase();
+$("#today").textContent=new Date().toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+
+const ME={state:"checking",role:null,cabor:[],id:null,name:"",email:null,avatar:"",isOwner:false};
+const TS={sub:"analisis",jk:"",cabor:"",test:"sprint30",sel:null};
+const S={db:null,dl:null,live:{siswa:[],entri:[],tes:[]},demo:null,mode:"loading",filter:"semua",cabor:"",sel:null,tab:"atlet",charts:{}};
+
+/* ---------- data contoh ---------- */
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function makeDemo(){
+  const r=mulberry(11);
+  const nm=[["Raka Pratama","Sepak bola","X"],["Alya Putri","Bola voli","X"],["Dimas Saputra","Atletik","X"],["Nadia Rahma","Bulu tangkis","X"],["Bagas Wicaksono","Pencak silat","X"],["Salsa Aulia","Renang","X"],["Fikri Hidayat","Sepak bola","XI"],["Galih Ramadhan","Bola voli","XI"],["Citra Lestari","Atletik","XI"],["Rizky Ananda","Sepak bola","XI"],["Intan Permata","Bulu tangkis","XI"],["Yoga Firmansyah","Pencak silat","XI"],["Dewi Anggraini","Renang","XII"],["Arif Kurniawan","Bola voli","XII"]];
+  const PUTRI=["Alya","Nadia","Salsa","Citra","Intan","Dewi"];
+  const siswa=nm.map((x,i)=>({id:"demo"+i,nama:x[0]+" (contoh)",cabor:x[1],kelas:x[2]+"-KKO",jk:PUTRI.includes(x[0].split(" ")[0])?"P":"L"}));
+  const entri=[];
+  siswa.forEach((s,i)=>{
+    const h0=156+Math.round(r()*16);const skip=r()<.25?.12:.04;
+    for(let k=89;k>=0;k--){
+      const t=addDays(TODAY,-k);const dow=parse(t).getDay();
+      if(k===0&&(i===4||i===10||i===13))continue;
+      if(k>0&&r()<skip)continue;
+      const rest=dow===0;const taper=k>=14&&k<21?.85:1;
+      let rpe=rest?0:Math.round((4+r()*2.4)*taper),dur=rest?0:Math.round((65+r()*35)*taper);
+      let w=WELL.map(()=>Math.min(5,Math.max(2,Math.round(3.4+r()*1.3-.4))));
+      let nyeri=Math.round(r()*1.8),area=[];
+      if(i===0&&k<7&&!rest){rpe=8;dur=125+Math.round(r()*20)}
+      if(i===9&&k<7&&!rest){rpe=6;dur=105}
+      if(i===3&&k<3){w=w.map(v=>Math.max(1,v-2))}
+      if(i===5&&k<4){nyeri=4+Math.round(r());area=["Bahu"]}
+      if(i===11&&k<2){w=w.map(v=>Math.max(1,v-1))}
+      if(i===12&&k<10&&!rest){rpe=Math.max(2,rpe-3);dur=40}
+      const e={id:s.id+"_"+t,siswaId:s.id,tanggal:t,rpe,durasi:dur,nyeri,area};
+      WELL.forEach((x,j)=>e[x[0]]=w[j]);
+      if(k===59||k===0||k===30)e.tinggi=+(h0+(i===7?(59-k)*0.0285:(59-k)*0.006)).toFixed(1);
+      entri.push(e);
+    }
+  });
+  const tes=[];const r2=mulberry(29);const g=(m,s)=>{let u=0;for(let k=0;k<6;k++)u+=r2();return m+(u-3)*s*1.4};
+  const PEL={"Sepak bola":"Coach Hendra","Bola voli":"Coach Rina","Atletik":"Coach Yusuf","Bulu tangkis":"Coach Dita","Pencak silat":"Coach Agus","Renang":"Coach Maya"};
+  siswa.forEach((s,i)=>{
+    s.pelatih=PEL[s.cabor]||"";
+    s.tb=+(s.jk==="P"?1.55+r2()*0.12:1.63+r2()*0.15).toFixed(2);
+    s.bb=+(s.tb*s.tb*(19+r2()*4)).toFixed(1);
+    const age=15+Math.floor(i/5)+(r2()<.5?0:1);
+    s.tglLahir=addDays(TODAY,-Math.round(age*365.25+r2()*300));
+  });
+  const valFromScore=(t,sc,jk,bb)=>{const c=t.norm[jk==="P"?"P":"L"];const pts=[[4.5,c[0]],[3.5,c[1]],[2.5,c[2]],[1.5,c[3]]];
+    let v;if(sc>=4.5)v=c[0]+(sc-4.5)*(c[0]-c[1]);else if(sc<=1.5)v=c[3]-(1.5-sc)*(c[2]-c[3]);else{for(let k=0;k<3;k++){const[a,va]=pts[k],[b,vb]=pts[k+1];if(sc<=a&&sc>=b){v=vb+(sc-b)/(a-b)*(va-vb);break}}}
+    if(t.rel)v*=bb;return Math.max(t.min,Math.min(t.max,v))};
+  siswa.forEach((s,i)=>{
+    const tal=g(0,.7);const sc0={};
+    [[84,"Awal semester"],[6,"Tengah semester"]].forEach(([ago,sesi],si)=>{
+      const t={id:s.id+"_"+addDays(TODAY,-ago),siswaId:s.id,tanggal:addDays(TODAY,-ago),sesi,bb:si===0?+(s.bb-0.8).toFixed(1):s.bb};
+      TESTS.forEach(T=>{
+        if(si===1&&i===12&&T.key==="yoyo")return;
+        const base=T.komp==="Kekuatan maksimal"?2.2:3;
+        const sc=si===0?(sc0[T.key]=base+tal+g(0,.55)):sc0[T.key]+(i===2?-.35:g(.35,.3));
+        const v=valFromScore(T,sc,s.jk,t.bb);
+        t[T.key]=T.step>=1?Math.round(v/T.step)*T.step:T.step>=0.5?Math.round(v*2)/2:+v.toFixed(2);
+      });
+      tes.push(t);
+    });
+  });
+  return{siswa,entri,tes};
+}
+
+/* ---------- analisis ---------- */
+const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const sd=a=>{const m=mean(a);return Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/Math.max(1,a.length-1))};
+const wellTotal=e=>WELL.reduce((s,x)=>s+(+e[x[0]]||0),0);
+const loadOf=e=>(+e.rpe||0)*(+e.durasi||0);
+function analyze(s,list){
+  const es=list.filter(e=>e.tanggal<=TODAY&&diffDays(TODAY,e.tanggal)<60).sort((a,b)=>a.tanggal<b.tanggal?-1:1);
+  const byDate={};es.forEach(e=>byDate[e.tanggal]=e);
+  const loadAt=t=>byDate[t]?loadOf(byDate[t]):0;
+  const acwrAt=t=>{let a=0,c=0,n=0;for(let k=0;k<28;k++){const d=addDays(t,-k);const l=loadAt(d);if(byDate[d])n++;c+=l;if(k<7)a+=l}c/=4;return n>=12&&c>0?a/c:null};
+  const days=[];for(let k=27;k>=0;k--){const t=addDays(TODAY,-k);const e=byDate[t];days.push({t,load:loadAt(t),well:e?wellTotal(e):null,has:!!e,acwr:acwrAt(t)})}
+  const acute=days.slice(-7).reduce((x,d)=>x+d.load,0);
+  const acwr=days[27].acwr;
+  const l7=days.slice(-7).map(d=>d.load);const sd7=sd(l7);
+  const mono=sd7>0?mean(l7)/sd7:null;
+  const last=es.length?es[es.length-1]:null;
+  const fresh=last&&diffDays(TODAY,last.tanggal)<=3;
+  const recent=es.filter(e=>diffDays(TODAY,e.tanggal)<28);
+  const zOf=e=>{const base=es.filter(b=>b.tanggal<e.tanggal&&diffDays(e.tanggal,b.tanggal)<=28).map(wellTotal);if(base.length<7)return null;return(wellTotal(e)-mean(base))/Math.max(1,sd(base))};
+  let z=null,zs=[],wt=last?wellTotal(last):null;
+  if(last){z=zOf(last);zs=es.slice(-3).map(zOf)}
+  const items=WELL.map(([k])=>({k,last:last?+last[k]:null,avg:recent.length?mean(recent.map(e=>+e[k])):null}));
+  const hs=es.filter(e=>e.tinggi);let gv=null;
+  if(hs.length>=2){const a=hs[0],b=hs[hs.length-1];const dd=diffDays(b.tanggal,a.tanggal);if(dd>=28)gv=(b.tinggi-a.tinggi)/(dd/365)}
+  const last3=es.slice(-3);const R=[],Y=[];
+  const base={acwr,mono,z,wt,gv,acute,days,last,items,byDate,compliance:days.filter(d=>d.has).length/28};
+  if(!fresh)return{...base,status:"kosong",reasons:[last?"Tidak ada entri 4 hari terakhir":"Belum ada entri"],todayIn:false};
+  if(last3.length===3&&last3.every(e=>+e.nyeri>=3))R.push("Nyeri ≥3 di 3 entri terakhir"+(last.area&&last.area.length?" ("+last.area.join(", ")+")":""));
+  if(acwr!=null&&acwr>1.5)R.push("Lonjakan beban (ACWR zona bahaya)");
+  if(z!=null){if(z<-2)R.push("Wellness jauh di bawah biasanya (z "+dec(z)+")");else if(zs.length===3&&zs.every(v=>v!=null&&v<-1))R.push("Wellness turun 3 entri berturut-turut")}
+  else if(wt!=null&&wt<=10)R.push("Skor wellness rendah ("+wt+"/25)");
+  if(acwr!=null&&acwr>1.3&&acwr<=1.5)Y.push("Beban naik (ACWR zona waspada)");
+  if(acwr!=null&&acwr<0.8)Y.push("Beban turun tajam (ACWR rendah)");
+  if(z!=null&&z<-1&&z>=-2&&!R.length)Y.push("Wellness di bawah biasanya (z "+dec(z)+")");
+  if(z==null&&wt!=null&&wt>10&&wt<=13)Y.push("Skor wellness agak rendah ("+wt+"/25)");
+  if(mono!=null&&mono>2)Y.push("Latihan monoton (monotony "+dec(mono)+")");
+  if(gv!=null&&gv>=7)Y.push("Fase tumbuh cepat ("+dec(gv,1)+" cm/thn)");
+  if(+last.nyeri>=3&&!R.length)Y.push("Nyeri "+last.nyeri+"/10"+(last.area&&last.area.length?" di "+last.area.join(", ").toLowerCase():""));
+  const status=R.length?"merah":Y.length?"kuning":"hijau";
+  return{...base,status,reasons:R.length?R.concat(Y):Y.length?Y:["Dalam batas normal"],todayIn:last.tanggal===TODAY};
+}
+function rawData(){return S.mode==="live"&&S.live.siswa.length?S.live:(S.demo||(S.demo=makeDemo()))}
+function scope(D){
+  if(ME.role!=="pelatih"||!ME.cabor.length)return D;
+  const siswa=D.siswa.filter(s=>ME.cabor.includes(s.cabor));const ids=new Set(siswa.map(s=>s.id));
+  return{siswa,entri:D.entri.filter(e=>ids.has(e.siswaId)),tes:(D.tes||[]).filter(t=>ids.has(t.siswaId))};
+}
+function data(){return scope(rawData())}
+function inputData(){return scope(S.mode==="live"?S.live:rawData())}
+const ORDER={merah:0,kuning:1,kosong:2,hijau:3};
+const LABEL={merah:"Merah",kuning:"Kuning",hijau:"Hijau",kosong:"Tanpa data"};
+
+/* ---------- tema grafik ---------- */
+function tok(){const cs=getComputedStyle(document.documentElement);const g=n=>cs.getPropertyValue(n).trim();return{ink:g("--ink"),muted:g("--muted"),line:g("--line"),surface:g("--surface"),accent:g("--accent"),accentSoft:g("--accent-soft"),accent2:g("--accent2"),red:g("--red"),redBg:g("--red-bg"),amber:g("--amber"),amberBg:g("--amber-bg"),green:g("--green"),greenBg:g("--green-bg"),gray:g("--gray-bg"),cat:[g("--c1"),g("--c2"),g("--c3"),g("--c4"),g("--c5")]}}
+const refLine={id:"refLine",afterDatasetsDraw(ch){const r=ch.options.plugins.refLine;if(!r)return;const{ctx,chartArea:a,scales}=ch;const sc=scales[r.axis||"x"];const p=sc.getPixelForValue(r.value);ctx.save();ctx.strokeStyle=r.color;ctx.setLineDash([4,3]);ctx.lineWidth=1.5;ctx.beginPath();if((r.axis||"x")==="x"){ctx.moveTo(p,a.top);ctx.lineTo(p,a.bottom)}else{ctx.moveTo(a.left,p);ctx.lineTo(a.right,p)}ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=r.color;ctx.font='600 11px Barlow,sans-serif';ctx.textAlign="left";ctx.fillText(r.label,(r.axis||"x")==="x"?Math.min(p+4,a.right-70):a.left+4,(r.axis||"x")==="x"?a.top+10:p-4);ctx.restore()}};
+const hasChart=()=>typeof window.Chart==="function";
+const zonePlugin={id:"zones",beforeDatasetsDraw(ch,_,o){const z=ch.options.plugins.zones;if(!z)return;const{ctx,chartArea:a,scales:{x,y}}=ch;ctx.save();ctx.beginPath();ctx.rect(a.left,a.top,a.width,a.height);ctx.clip();z.forEach(r=>{const x1=r.x?x.getPixelForValue(r.x[0]):a.left,x2=r.x?x.getPixelForValue(r.x[1]):a.right,y1=r.y?y.getPixelForValue(r.y[1]):a.top,y2=r.y?y.getPixelForValue(r.y[0]):a.bottom;ctx.fillStyle=r.c;ctx.fillRect(Math.min(x1,x2),Math.min(y1,y2),Math.abs(x2-x1),Math.abs(y2-y1))});ctx.restore()}};
+function mkChart(id,cfg){
+  const el=document.getElementById(id);if(!el)return;
+  if(S.charts[id]){S.charts[id].destroy();delete S.charts[id]}
+  if(!hasChart()){el.parentElement.innerHTML='<div class="cvmsg">Grafik tidak dapat dimuat. Periksa koneksi lalu muat ulang halaman.</div>';return}
+  const T=tok();
+  Chart.defaults.font.family='"Barlow",system-ui,sans-serif';Chart.defaults.font.size=12;Chart.defaults.color=T.muted;
+  cfg.options=cfg.options||{};
+  cfg.options.responsive=true;cfg.options.maintainAspectRatio=false;
+  cfg.options.animation=matchMedia("(prefers-reduced-motion: reduce)").matches?false:{duration:400};
+  cfg.options.plugins=Object.assign({tooltip:{backgroundColor:T.ink,titleColor:T.surface,bodyColor:T.surface,padding:10,cornerRadius:8,displayColors:true,boxPadding:4}},cfg.options.plugins||{});
+  if(cfg.options.plugins.legend===undefined)cfg.options.plugins.legend={display:false};
+  S.charts[id]=new Chart(el,{...cfg,plugins:[zonePlugin,refLine]});
+}
+const axis=(T,extra)=>Object.assign({grid:{color:T.line,drawTicks:false},border:{display:false},ticks:{padding:6,color:T.muted}},extra||{});
+
+/* ---------- render dashboard ---------- */
+function banner(){
+  const b=$("#banner");
+  if(S.mode==="loading"){b.hidden=false;b.textContent="Memuat data…";return}
+  if(S.mode==="demo"){b.hidden=false;b.textContent="Mode contoh: aplikasi belum terhubung ke database, jadi yang tampil adalah 14 siswa contoh. Entri baru hanya bertahan sampai halaman ditutup.";return}
+  if(!S.live.siswa.length){b.hidden=false;b.textContent="Belum ada siswa terdaftar, jadi dashboard menampilkan data contoh. Begitu siswa pertama ditambahkan di tab Data siswa, semua grafik memakai data asli.";return}
+  b.hidden=true;
+}
+function computeRows(){
+  const D=data();const by={};D.entri.forEach(e=>(by[e.siswaId]=by[e.siswaId]||[]).push(e));
+  return D.siswa.map(s=>({s,a:analyze(s,by[s.id]||[])}));
+}
+function renderDash(){
+  const all=computeRows();
+  const cabs=[...new Set(all.map(x=>x.s.cabor))].sort();
+  $("#fCabor").innerHTML='<option value="">Semua cabor</option>'+cabs.map(c=>`<option ${c===S.cabor?"selected":""}>${esc(c)}</option>`).join("");
+  const pool=all.filter(x=>!S.cabor||x.s.cabor===S.cabor);
+  $("#scopeTitle").textContent=S.cabor?"Ringkasan "+S.cabor:"Ringkasan seluruh kelas";
+  renderKpis(pool);renderRisk(pool);renderCabor(all);renderClass(pool);renderAcwrAll(pool);renderHeat(pool);renderList(pool);
+  renderDetail(all.find(x=>x.s.id===S.sel));
+}
+function renderKpis(pool){
+  const cnt=k=>pool.filter(x=>x.a.status===k).length;const n=pool.length||1;
+  const inToday=pool.filter(x=>x.a.todayIn).length;
+  const pct=v=>Math.round(v/n*100)+"% dari "+pool.length+" siswa";
+  const K=[["merah","Perlu tindakan","red",cnt("merah"),pct(cnt("merah"))],["kuning","Perlu dipantau","amber",cnt("kuning"),pct(cnt("kuning"))],["hijau","Aman berlatih","green",cnt("hijau"),pct(cnt("hijau"))],["hari","Kepatuhan isi hari ini","",inToday,""]];
+  $("#kpis").innerHTML=K.map(([k,l,c,v,s])=>`<button class="kpi ${c}" data-f="${k}" aria-pressed="${S.filter===k}"><span class="t">${l}</span><span class="n">${v}${k==="hari"?`<small>/${pool.length}</small>`:""}</span>${k==="hari"?`<span class="meter"><i style="width:${Math.round(inToday/n*100)}%"></i></span><span class="s">Klik untuk melihat yang belum mengisi</span>`:`<span class="s">${s}</span>`}</button>`).join("");
+}
+function renderRisk(pool){
+  const T=tok();const col={merah:T.red,kuning:T.amber,hijau:T.green,kosong:T.accent2};
+  const pts=pool.filter(x=>x.a.acwr!=null&&x.a.z!=null).map(x=>({x:+x.a.acwr.toFixed(2),y:+Math.max(-3.4,Math.min(2.4,x.a.z)).toFixed(2),n:x.s.nama.replace(" (contoh)",""),st:x.a.status,id:x.s.id}));
+  mkChart("cRisk",{type:"scatter",data:{datasets:[{data:pts,pointRadius:pts.map(p=>p.id===S.sel?9:6.5),pointHoverRadius:10,pointBackgroundColor:pts.map(p=>col[p.st]),pointBorderColor:T.surface,pointBorderWidth:2}]},
+    options:{onClick:(e,els)=>{if(els.length){S.sel=pts[els[0].index].id;renderDash();scrollDetail()}},
+      scales:{x:axis(T,{min:0.4,max:2.2,title:{display:true,text:"ACWR (beban akut ÷ kronis)",color:T.muted},ticks:{stepSize:0.2,color:T.muted,callback:v=>dec(v,1)}}),y:axis(T,{min:-3.5,max:2.5,title:{display:true,text:"z-wellness (vs baseline sendiri)",color:T.muted},ticks:{stepSize:1,color:T.muted}})},
+      plugins:{zones:[{x:[0.8,1.3],y:[-1,2.5],c:T.greenBg},{x:[1.5,2.2],y:[-3.5,2.5],c:T.redBg},{x:[0.4,1.5],y:[-3.5,-2],c:T.redBg}],
+        tooltip:{callbacks:{title:it=>it[0].raw.n,label:it=>["ACWR "+dec(it.raw.x),"z-wellness "+dec(it.raw.y),"Status "+LABEL[it.raw.st]]}}}}});
+}
+function renderCabor(all){
+  const T=tok();const cabs=[...new Set(all.map(x=>x.s.cabor))].sort();
+  const ds=[["merah",T.red],["kuning",T.amber],["hijau",T.green],["kosong",T.accent2]].map(([k,c])=>({label:LABEL[k],data:cabs.map(cb=>all.filter(x=>x.s.cabor===cb&&x.a.status===k).length),backgroundColor:c,borderColor:T.surface,borderWidth:2,borderRadius:4,borderSkipped:false,barThickness:18}));
+  mkChart("cCabor",{type:"bar",data:{labels:cabs,datasets:ds},options:{indexAxis:"y",onClick:(e,els)=>{if(els.length){S.cabor=cabs[els[0].index];renderDash()}},
+    scales:{x:axis(T,{stacked:true,ticks:{stepSize:1,precision:0,color:T.muted},title:{display:true,text:"Jumlah siswa",color:T.muted}}),y:axis(T,{stacked:true,grid:{display:false},ticks:{color:T.ink}})},
+    plugins:{legend:{display:true,position:"bottom",labels:{boxWidth:12,boxHeight:12,useBorderRadius:true,borderRadius:3,color:T.ink}}}}});
+}
+function renderClass(pool){
+  const T=tok();const days=pool[0]?pool[0].a.days.map(d=>d.t):[];
+  const avgLoad=days.map((t,i)=>{const v=pool.map(x=>x.a.days[i]).filter(d=>d.has).map(d=>d.load);return v.length?Math.round(mean(v)):0});
+  const avgWell=days.map((t,i)=>{const v=pool.map(x=>x.a.days[i].well).filter(v=>v!=null);return v.length?+mean(v).toFixed(1):null});
+  const labels=days.map(fmtD);
+  mkChart("cLoad",{type:"bar",data:{labels,datasets:[{label:"Rata-rata beban",data:avgLoad,backgroundColor:days.map((_,i)=>i>=21?T.accent:T.accentSoft),borderRadius:4,borderSkipped:"bottom",maxBarThickness:16}]},
+    options:{scales:{x:axis(T,{grid:{display:false},ticks:{maxTicksLimit:7,maxRotation:0,color:T.muted}}),y:axis(T,{beginAtZero:true,ticks:{maxTicksLimit:5,color:T.muted}})},plugins:{tooltip:{callbacks:{label:it=>it.raw+" AU"+(it.dataIndex>=21?" · 7 hari terakhir":"")}}}}});
+  mkChart("cWell",{type:"line",data:{labels,datasets:[{label:"Rata-rata wellness",data:avgWell,borderColor:T.accent,backgroundColor:T.accentSoft,fill:"start",borderWidth:2,tension:.3,pointRadius:days.map((_,i)=>i===days.length-1?4:0),pointBackgroundColor:T.accent,spanGaps:true}]},
+    options:{interaction:{mode:"index",intersect:false},scales:{x:axis(T,{grid:{display:false},ticks:{maxTicksLimit:7,maxRotation:0,color:T.muted}}),y:axis(T,{min:5,max:25,ticks:{stepSize:5,color:T.muted}})},plugins:{zones:[{y:[5,10],c:T.redBg},{y:[10,13],c:T.amberBg}],tooltip:{callbacks:{label:it=>"Rata-rata "+dec(it.raw,1)+"/25"}}}}});
+}
+function cls(v){return v==null?"c0":v<=10?"c1":v<=13?"c2":v<=17?"c3":"c4"}
+function renderHeat(pool){
+  const rows=[...pool].sort((a,b)=>ORDER[a.a.status]-ORDER[b.a.status]||a.s.nama.localeCompare(b.s.nama));
+  const days=pool[0]?pool[0].a.days.slice(-14):[];
+  const h=$("#heat");h.style.gridTemplateColumns=`minmax(120px,170px) repeat(14,minmax(26px,1fr))`;
+  if(!rows.length){h.innerHTML='<div class="empty" style="grid-column:1/-1">Belum ada siswa.</div>';return}
+  h.innerHTML='<div></div>'+days.map(d=>`<div class="dh">${parse(d.t).getDate()}</div>`).join("")+rows.map(({s,a})=>`<div class="lbl" title="${esc(s.nama)}">${esc(s.nama.replace(" (contoh)",""))}</div>`+a.days.slice(-14).map(d=>`<div class="c ${cls(d.well)}" title="${esc(s.nama.replace(" (contoh)",""))} · ${fmtD(d.t)} · ${d.well==null?"tidak mengisi":"wellness "+d.well+"/25"}">${d.well??""}</div>`).join("")).join("");
+}
+function spark(days){
+  const v=days.slice(-14).map(d=>d.load);const mx=Math.max(1,...v);const w=70,h=22;
+  const pts=v.map((y,i)=>(i*(w-4)/13+2).toFixed(1)+","+(h-2-(y/mx)*(h-4)).toFixed(1)).join(" ");
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round"/><circle cx="${w-2}" cy="${(h-2-(v[13]/mx)*(h-4)).toFixed(1)}" r="2.4" fill="var(--accent)"/></svg>`;
+}
+function acwrGauge(v,big){
+  const W=big?220:116,H=big?40:24,x0=3,x1=W-3,lo=0.4,hi=2.0;
+  const X=x=>x0+(Math.min(hi,Math.max(lo,x))-lo)/(hi-lo)*(x1-x0);
+  const by=big?12:8,bh=big?10:7;
+  const z=[[lo,0.8,"var(--amber-bg)"],[0.8,1.3,"var(--green-bg)"],[1.3,1.5,"var(--amber-bg)"],[1.5,hi,"var(--red-bg)"]];
+  let g=z.map(([a,b,c],i)=>`<rect x="${X(a).toFixed(1)}" y="${by}" width="${(X(b)-X(a)).toFixed(1)}" height="${bh}" fill="${c}" ${i===0?'rx="3"':""}/>`).join("");
+  g+=`<rect x="${x0}" y="${by}" width="${x1-x0}" height="${bh}" rx="3" fill="none" stroke="var(--line)"/>`;
+  if(big)g+=[0.8,1.3,1.5].map(t=>`<text x="${X(t).toFixed(1)}" y="${by+bh+12}" font-size="10" fill="var(--muted)" text-anchor="middle">${String(t).replace(".",",")}</text>`).join("");
+  let label;
+  if(v==null){g+=`<text x="${W/2}" y="${by+bh-1}" font-size="${big?11:9}" fill="var(--muted)" text-anchor="middle">data belum cukup</text>`;label="ACWR: data belum cukup (butuh ±3 minggu)"}
+  else{const col=v>1.5?"var(--red)":(v>1.3||v<0.8)?"var(--amber)":"var(--green)";const cx=X(v).toFixed(1),cy=by+bh/2;
+    g+=`<line x1="${cx}" x2="${cx}" y1="${by-3}" y2="${by+bh+3}" stroke="${col}" stroke-width="${big?3:2.5}" stroke-linecap="round"/><circle cx="${cx}" cy="${by-4}" r="${big?5:3.5}" fill="${col}" stroke="var(--surface)" stroke-width="1.5"/>`;
+    label="ACWR "+dec(v)+" · "+(v>1.5?"zona bahaya":v>1.3?"zona waspada":v<0.8?"beban rendah":"zona aman")}
+  return `<svg class="ag" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}"><title>${label}</title>${g}</svg>`;
+}
+function renderAcwrAll(pool){
+  const T=tok();const rs=pool.filter(x=>x.a.acwr!=null).map(x=>({n:x.s.nama.replace(" (contoh)",""),v:+x.a.acwr.toFixed(2),id:x.s.id})).sort((a,b)=>b.v-a.v);
+  const miss=pool.length-rs.length;
+  $("#acwrBox").style.height=Math.max(180,rs.length*24+70)+"px";
+  $("#acwrNote").textContent=miss?miss+" siswa belum punya data cukup (butuh sekitar 3 minggu entri) sehingga tidak tampil.":"";
+  if(!rs.length){if(S.charts.cAcwrAll){S.charts.cAcwrAll.destroy();delete S.charts.cAcwrAll}return}
+  const col=v=>v>1.5?T.red:(v>1.3||v<0.8)?T.amber:T.green;
+  mkChart("cAcwrAll",{type:"bar",data:{labels:rs.map(r=>r.n),datasets:[{data:rs.map(r=>r.v),backgroundColor:rs.map(r=>col(r.v)),borderRadius:4,borderSkipped:false,barThickness:14}]},
+    options:{indexAxis:"y",onClick:(e,els)=>{if(els.length){S.sel=rs[els[0].index].id;renderDash();scrollDetail()}},
+      scales:{x:axis(T,{min:0,max:Math.max(2,Math.ceil(Math.max(...rs.map(r=>r.v))*5)/5),ticks:{stepSize:0.25,color:T.muted,callback:v=>[0.8,1.3,1.5,0,2].includes(+v.toFixed(2))?dec(v,1):""},title:{display:true,text:"ACWR",color:T.muted}}),y:axis(T,{grid:{display:false},ticks:{color:T.ink,autoSkip:false}})},
+      plugins:{zones:[{x:[0.8,1.3],c:T.greenBg},{x:[1.3,1.5],c:T.amberBg},{x:[1.5,4],c:T.redBg}],tooltip:{callbacks:{label:it=>{const v=it.raw;return"ACWR "+dec(v)+" · "+(v>1.5?"zona bahaya":v>1.3?"zona waspada":v<0.8?"beban rendah":"zona aman")}}}}}});
+}
+function renderList(pool){
+  let view=pool;
+  if(S.filter==="hari")view=pool.filter(x=>!x.a.todayIn);else if(S.filter!=="semua")view=pool.filter(x=>x.a.status===S.filter);
+  view=[...view].sort((a,b)=>ORDER[a.a.status]-ORDER[b.a.status]||(b.a.acwr||0)-(a.a.acwr||0));
+  $("#listTitle").textContent=S.filter==="semua"?"Daftar prioritas":S.filter==="hari"?"Belum mengisi hari ini":"Siswa berstatus "+LABEL[S.filter].toLowerCase();
+  const head=`<div class="row head"><span>Siswa</span><span>Status</span><span>Alasan</span><span>ACWR</span><span class="num">Wellness</span><span class="num">Beban 7h</span><span class="num sp">14 hari</span></div>`;
+  $("#list").innerHTML=head+(view.length?view.map(({s,a})=>`<button class="row ${S.sel===s.id?"sel":""}" data-id="${s.id}"><span class="nm">${esc(s.nama)}<small>${esc(s.cabor)} · ${esc(s.kelas||"")}</small></span><span><span class="pill p-${a.status}">${LABEL[a.status]}</span></span><span class="why">${a.reasons.map(esc).join(" · ")}</span><span class="agc">${acwrGauge(a.acwr)}</span><span class="num">${a.wt!=null?a.wt+"/25":"–"}</span><span class="num">${a.acute.toLocaleString("id-ID")}</span><span class="sp">${spark(a.days)}</span></button>`).join(""):`<div class="empty">${S.filter==="hari"?"Semua siswa sudah mengisi hari ini.":"Tidak ada siswa di kategori ini."}</div>`);
+}
+function renderDetail(x){
+  const el=$("#detail");if(!x){el.hidden=true;["dLoad","dAcwr","dWell","dRadar"].forEach(k=>{if(S.charts[k]){S.charts[k].destroy();delete S.charts[k]}});return}
+  el.hidden=false;const{s,a}=x;const T=tok();
+  const M=[["Beban 7 hari",a.acute.toLocaleString("id-ID")],["Wellness",a.wt!=null?a.wt+"/25":"–"],["z-wellness",a.z!=null?dec(a.z):"< 7 data"],["Monotony",dec(a.mono)],["Kepatuhan 28h",Math.round(a.compliance*100)+"%"]];
+  el.innerHTML=`<div class="dhead"><div class="who"><div class="avatar">${esc(initials(s.nama))}</div><div><h2>${esc(s.nama)}</h2><div class="sub">${esc(s.cabor)} · ${esc(s.kelas||"")}${a.last?" · entri terakhir "+fmtD(a.last.tanggal):""}${a.gv!=null?" · tumbuh "+dec(a.gv,1)+" cm/thn":""}</div></div></div><div style="display:flex;gap:8px;align-items:center"><span class="pill p-${a.status}">${LABEL[a.status]}</span><button class="btn ghost sm" id="closeDetail">Tutup</button></div></div>
+  <ul class="reasons">${a.reasons.map(r=>`<li>${esc(r)}</li>`).join("")}</ul>
+  <div class="metrics"><div class="m"><div class="v" style="line-height:0">${acwrGauge(a.acwr,true)}</div><div class="k">ACWR (beban akut ÷ kronis)</div></div>${M.map(([k,v])=>`<div class="m"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("")}</div>
+  <div class="g2">
+    <div><h3>Beban harian (sRPE), 28 hari</h3><div class="cv short"><canvas id="dLoad"></canvas></div></div>
+    <div><h3>Tren ACWR</h3><div class="cv short"><canvas id="dAcwr"></canvas></div></div>
+    <div><h3>Skor wellness, 28 hari</h3><div class="cv short"><canvas id="dWell"></canvas></div></div>
+    <div><h3>Profil wellness: entri terakhir vs rata-rata 28 hari</h3><div class="cv short"><canvas id="dRadar"></canvas></div></div>
+  </div>`;
+  $("#closeDetail").onclick=()=>{S.sel=null;renderDash()};
+  const labels=a.days.map(d=>fmtD(d.t));
+  const xs=axis(T,{grid:{display:false},ticks:{maxTicksLimit:6,maxRotation:0,color:T.muted}});
+  mkChart("dLoad",{type:"bar",data:{labels,datasets:[{data:a.days.map(d=>d.load),backgroundColor:a.days.map((d,i)=>i>=21?T.accent:T.accentSoft),borderRadius:4,borderSkipped:"bottom",maxBarThickness:14}]},options:{scales:{x:xs,y:axis(T,{beginAtZero:true,ticks:{maxTicksLimit:4,color:T.muted}})},plugins:{tooltip:{callbacks:{label:it=>{const d=a.days[it.dataIndex];const e=a.byDate[d.t];return e?["Beban "+it.raw+" AU","RPE "+e.rpe+" × "+e.durasi+" menit"]:"Tidak ada entri"}}}}}});
+  mkChart("dAcwr",{type:"line",data:{labels,datasets:[{data:a.days.map(d=>d.acwr!=null?+d.acwr.toFixed(2):null),borderColor:T.ink,borderWidth:2,tension:.25,pointRadius:a.days.map((d,i)=>i===27?4:0),pointBackgroundColor:T.ink,spanGaps:true}]},options:{interaction:{mode:"index",intersect:false},scales:{x:xs,y:axis(T,{min:0.4,max:2,ticks:{stepSize:0.4,color:T.muted,callback:v=>dec(v,1)}})},plugins:{zones:[{y:[0.8,1.3],c:T.greenBg},{y:[1.5,2],c:T.redBg}],tooltip:{callbacks:{label:it=>it.raw==null?"Data belum cukup":"ACWR "+dec(it.raw)}}}}});
+  mkChart("dWell",{type:"line",data:{labels,datasets:[{data:a.days.map(d=>d.well),borderColor:T.accent,backgroundColor:T.accentSoft,fill:"start",borderWidth:2,tension:.25,pointRadius:a.days.map(d=>d.well!=null?2.5:0),pointBackgroundColor:T.accent,spanGaps:true}]},options:{interaction:{mode:"index",intersect:false},scales:{x:xs,y:axis(T,{min:5,max:25,ticks:{stepSize:5,color:T.muted}})},plugins:{zones:[{y:[5,10],c:T.redBg},{y:[10,13],c:T.amberBg}],tooltip:{callbacks:{label:it=>it.raw==null?"Tidak mengisi":"Wellness "+it.raw+"/25"}}}}});
+  mkChart("dRadar",{type:"radar",data:{labels:WELL.map(w=>w[1]),datasets:[{label:"Entri terakhir",data:a.items.map(i=>i.last),borderColor:T.accent,backgroundColor:T.accentSoft+"",borderWidth:2,pointRadius:3,pointBackgroundColor:T.accent},{label:"Rata-rata 28 hari",data:a.items.map(i=>i.avg!=null?+i.avg.toFixed(1):null),borderColor:T.accent2,borderDash:[4,3],borderWidth:1.5,backgroundColor:"transparent",pointRadius:2,pointBackgroundColor:T.accent2}]},
+    options:{scales:{r:{min:0,max:5,ticks:{stepSize:1,display:false},grid:{color:T.line},angleLines:{color:T.line},pointLabels:{color:T.ink,font:{size:11}}}},plugins:{legend:{display:true,position:"bottom",labels:{boxWidth:12,boxHeight:3,color:T.ink}}}}});
+}
+function scrollDetail(){const d=$("#detail");if(!d.hidden)d.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"})}
+
+/* ---------- tes fisik: analisis (norma skala 1–5) ---------- */
+const CAT=[["Kurang sekali","k1"],["Kurang","k2"],["Sedang","k3"],["Baik","k4"],["Baik sekali","k5"]];
+const fmtV=(T,v)=>v==null||!isFinite(v)?"–":(T.step<0.1?(+v).toFixed(2):T.step<1?(+v).toFixed(1):String(Math.round(v))).replace(".",",");
+const fmtR=v=>v==null?"–":(+v).toFixed(2).replace(".",",")+"×";
+function tesData(){const D=data();return D.tes||[]}
+function latestMap(list){
+  const by={};(list||tesData()).forEach(t=>(by[t.siswaId]=by[t.siswaId]||[]).push(t));
+  const M={};
+  Object.keys(by).forEach(sid=>{
+    const L=by[sid].sort((a,b)=>a.tanggal<b.tanggal?-1:1);const m={_last:L[L.length-1]};
+    TESTS.forEach(T=>{const h=L.filter(t=>t[T.key]!=null&&t[T.key]!=="");if(!h.length)return;const a=h[h.length-1],b=h.length>1?h[h.length-2]:null;
+      m[T.key]={v:+a[T.key],tgl:a.tanggal,bb:a.bb||null,prev:b?+b[T.key]:null,prevBb:b?(b.bb||null):null,prevTgl:b?b.tanggal:null}});
+    M[sid]=m;
+  });
+  return M;
+}
+function rowOf(s,m){
+  const sk={},pk={},rel={};
+  TESTS.forEach(T=>{const x=m[T.key];if(!x)return;const bb=x.bb||s.bb;sk[T.key]=skalaOf(T,x.v,s.jk,bb);if(x.prev!=null)pk[T.key]=skalaOf(T,x.prev,s.jk,x.prevBb||bb);if(T.rel&&bb)rel[T.key]=x.v/bb});
+  const v=Object.values(sk).filter(x=>x!=null);
+  return{s,m,sk,pk,rel,pct:v.length?mean(v)/5*100:null,n:v.length};
+}
+function tesCtx(){
+  const D=data();const M=latestMap(D.tes||[]);
+  const pool=D.siswa.filter(s=>(!TS.jk||s.jk===TS.jk)&&(!TS.cabor||s.cabor===TS.cabor));
+  return{D,M,pool,rows:pool.map(s=>rowOf(s,M[s.id]||{}))};
+}
+function renderTes(){
+  if(TS.sub==="input"){renderTesForm();return}
+  const C=tesCtx();const T=tok();
+  const cabs=[...new Set(C.D.siswa.map(s=>s.cabor))].sort();
+  $("#tCabor").innerHTML='<option value="">Semua cabor</option>'+cabs.map(c=>`<option ${c===TS.cabor?"selected":""}>${esc(c)}</option>`).join("");
+  if(!TESTS.some(t=>t.key===TS.test))TS.test=TESTS[0].key;
+  $("#tTest").innerHTML=TESTS.map(t=>`<option value="${t.key}" ${t.key===TS.test?"selected":""}>${t.label}</option>`).join("");
+  const lastDates=C.rows.map(r=>r.m._last&&r.m._last.tanggal).filter(Boolean).sort();const lastD=lastDates[lastDates.length-1];
+  const tested=lastD?C.rows.filter(r=>r.m._last&&diffDays(lastD,r.m._last.tanggal)<=30).length:0;
+  let up=0,down=0,pairs=0;C.rows.forEach(r=>TESTS.forEach(t=>{if(r.pk[t.key]==null||r.sk[t.key]==null)return;pairs++;if(r.sk[t.key]>r.pk[t.key])up++;else if(r.sk[t.key]<r.pk[t.key])down++}));
+  const pcts=C.rows.map(r=>r.pct).filter(v=>v!=null);
+  const attn=C.rows.filter(r=>Object.values(r.sk).filter(v=>v===1).length>=3).length;
+  const lastSesi=lastD?(C.rows.find(r=>r.m._last&&r.m._last.tanggal===lastD).m._last.sesi||""):"";
+  const K=[["Rata-rata performa fisik","green",pcts.length?Math.round(mean(pcts))+"<small>%</small>":"–",pcts.length?`${pcts.length} siswa, skala rata-rata ÷ 5`:"Belum ada data tes"],
+    ["Sudah dites (sesi terakhir)","",`${tested}<small>/${C.pool.length}</small>`,lastD?`Sesi ${esc(lastSesi).toLowerCase()} · ${fmtD(lastD)}`:"Belum ada data tes"],
+    ["Skala naik dari tes sebelumnya","green",pairs?Math.round(up/pairs*100)+"<small>%</small>":"–",pairs?`${up} naik · ${down} turun dari ${pairs} hasil`:"Butuh minimal 2 sesi tes"],
+    ["Perlu program khusus","amber",String(attn),"≥ 3 tes berskala 1 (kurang sekali)"]];
+  $("#tesKpis").innerHTML=K.map(([l,c,v,s])=>`<div class="kpi ${c}" style="cursor:default"><span class="t">${l}</span><span class="n">${v}</span><span class="s">${s}</span></div>`).join("");
+  renderRank(C,T);renderSebaran(C,T);renderMatrix(C);renderTesProfil(C,T);
+}
+function renderRank(C,T){
+  const t=TESTS.find(x=>x.key===TS.test);
+  const rs=C.rows.filter(r=>r.m[t.key]&&(!t.rel||r.rel[t.key]!=null)).map(r=>({n:r.s.nama.replace(" (contoh)",""),v:t.rel?+r.rel[t.key].toFixed(2):r.m[t.key].v,kg:r.m[t.key].v,sk:r.sk[t.key],id:r.s.id,jk:r.s.jk})).sort((a,b)=>t.dir*(b.v-a.v));
+  $("#rankBox").style.height=Math.max(220,rs.length*26+70)+"px";
+  if(!rs.length){if(S.charts.cRank){S.charts.cRank.destroy();delete S.charts.cRank}$("#rankNote").textContent="Belum ada hasil untuk tes ini.";return}
+  const m=mean(rs.map(r=>r.v));const lo=Math.min(...rs.map(r=>r.v)),hi=Math.max(...rs.map(r=>r.v));const span=Math.max(hi-lo,t.rel?0.2:t.step*4);
+  const unit=t.rel?"× berat badan":t.unit;
+  mkChart("cRank",{type:"bar",data:{labels:rs.map(r=>r.n),datasets:[{data:rs.map(r=>r.v),backgroundColor:rs.map(r=>r.sk?T.cat[r.sk-1]:T.accent2),borderRadius:4,borderSkipped:false,barThickness:16}]},
+    options:{indexAxis:"y",onClick:(e,els)=>{if(els.length){TS.sel=rs[els[0].index].id;renderTes();$("#tesProfil").scrollIntoView({block:"start",behavior:"smooth"})}},
+      scales:{x:axis(T,{min:t.dir<0?+(lo-span*.3).toFixed(2):(lo-span*.3>0?+(lo-span*.3).toFixed(2):0),max:+(hi+span*.15).toFixed(2),title:{display:true,text:t.label+" ("+unit+")",color:T.muted},ticks:{maxTicksLimit:6,color:T.muted}}),y:axis(T,{grid:{display:false},ticks:{color:T.ink,autoSkip:false}})},
+      plugins:{refLine:{value:m,label:"rata-rata "+(t.rel?fmtR(m):fmtV(t,m)),color:T.ink},tooltip:{callbacks:{label:it=>{const r=rs[it.dataIndex];return[(t.rel?fmtV(t,r.kg)+" kg · "+fmtR(r.v)+" BB":fmtV(t,r.v)+" "+t.unit),r.sk?"Skala "+r.sk+" · "+SKALA[r.sk]:"",r.jk==="P"?"Putri":"Putra"].filter(Boolean)}}}}}});
+  $("#rankNote").textContent=(t.dir<0?"Waktu lebih kecil = lebih baik. ":"")+(t.rel?"Dinilai sebagai kelipatan berat badan. ":"")+"Warna batang = skala norma (putra dan putri memakai norma masing-masing). Klik batang untuk profil.";
+}
+function renderSebaran(C,T){
+  const ds=[1,2,3,4,5].map(k=>({label:"Skala "+k+" · "+SKALA[k],data:TESTS.map(t=>{const v=C.rows.map(r=>r.sk[t.key]).filter(x=>x!=null);return v.length?Math.round(v.filter(x=>x===k).length/v.length*100):0}),backgroundColor:T.cat[k-1],borderColor:T.surface,borderWidth:1.5,borderSkipped:false,barThickness:16}));
+  mkChart("cKomp",{type:"bar",data:{labels:TESTS.map(t=>t.short),datasets:ds},options:{indexAxis:"y",scales:{x:axis(T,{stacked:true,max:100,ticks:{callback:v=>v+"%",color:T.muted,stepSize:25}}),y:axis(T,{stacked:true,grid:{display:false},ticks:{color:T.ink,autoSkip:false}})},
+    plugins:{legend:{display:true,position:"bottom",labels:{boxWidth:12,boxHeight:12,color:T.ink,font:{size:11}}},tooltip:{callbacks:{label:it=>it.dataset.label+": "+it.raw+"%"}}}}});
+}
+function renderMatrix(C){
+  const rows=[...C.rows].sort((a,b)=>(b.pct??-1)-(a.pct??-1));
+  const head=`<thead><tr><th class="nmh">Siswa</th>${TESTS.map(t=>`<th title="${t.label}">${t.short}<br><span style="text-transform:none;font-weight:400">${t.rel?"kg":t.unit}</span></th>`).join("")}<th>Performa</th></tr></thead>`;
+  const body=rows.length?rows.map(r=>`<tr><td class="nmc"><button data-ts="${r.s.id}">${esc(r.s.nama.replace(" (contoh)",""))}</button><br><span class="sub" style="font-size:12px">${esc(r.s.cabor)}${r.s.jk?" · "+(r.s.jk==="P"?"Pi":"Pa"):""}</span></td>${TESTS.map(t=>{const x=r.m[t.key];const k=r.sk[t.key];return x?`<td class="${k?CAT[k-1][1]:"k3"}" title="${t.label}: ${fmtV(t,x.v)} ${t.unit}${t.rel&&r.rel[t.key]!=null?" ("+fmtR(r.rel[t.key])+" BB)":""}${k?" · skala "+k+" "+SKALA[k]:""}">${fmtV(t,x.v)}<small>${k?"S"+k:""}${t.rel&&r.rel[t.key]!=null?" · "+fmtR(r.rel[t.key]):""}</small></td>`:`<td class="k0">–</td>`}).join("")}<td class="${r.pct==null?"k0":CAT[Math.max(0,Math.min(4,Math.round(r.pct/20)-1))][1]}"><b>${r.pct!=null?Math.round(r.pct)+"%":"–"}</b></td></tr>`).join(""):`<tr><td colspan="${TESTS.length+2}" class="empty">Belum ada siswa di filter ini.</td></tr>`;
+  $("#tesMatrix").innerHTML=head+"<tbody>"+body+"</tbody>";
+}
+function renderTesProfil(C,T){
+  const el=$("#tesProfil");
+  const withData=C.rows.filter(r=>r.m._last);
+  if(!withData.length){el.innerHTML='<h3>Profil kondisi fisik</h3><div class="empty">Belum ada hasil tes. Isi lewat Input hasil tes.</div>';return}
+  const r=withData.find(x=>x.s.id===TS.sel)||withData[0];TS.sel=r.s.id;const s=r.s;
+  const kompS=KOMP.map(k=>{const v=TESTS.filter(t=>t.komp===k).map(t=>r.sk[t.key]).filter(x=>x!=null);return{k,v:v.length?mean(v):null}}).filter(x=>x.v!=null).sort((a,b)=>a.v-b.v);
+  const weak=kompS.filter(x=>x.v<2.5).slice(0,2),strong=kompS.filter(x=>x.v>=4).slice(-2).reverse();
+  const notes=[];
+  if(weak.length)notes.push(`Prioritas latihan: <b>${weak.map(w=>w.k.toLowerCase()).join(" dan ")}</b> (rata-rata skala di bawah 2,5).`);
+  if(strong.length)notes.push(`Keunggulan: <b>${strong.map(w=>w.k.toLowerCase()).join(" dan ")}</b>.`);
+  if(r.m.yoyo){const vo2=r.m.yoyo.v*0.0084+36.4;notes.push(`Estimasi VO₂max dari Yo-Yo IR1: <b>${dec(vo2,1)} ml/kg/menit</b>.`)}
+  if(!notes.length)notes.push("Profil seimbang, tidak ada komponen yang menonjol lemah.");
+  const rowsT=TESTS.map(t=>{const x=r.m[t.key];if(!x)return `<tr><td>${t.label}</td><td class="r">–</td><td class="r">–</td><td class="r">–</td><td><span class="sub">Belum dites</span></td></tr>`;
+    const k=r.sk[t.key],pk=r.pk[t.key];let ch="–",cl="flat";
+    if(x.prev!=null){const d=x.v-x.prev;const good=d*t.dir;ch=(d>0?"+":"")+fmtV(t,d)+" "+t.unit;cl=good>0?"up":good<0?"down":"flat"}
+    const skTxt=k?`<span class="pill" style="background:var(--${["red-bg","amber-bg","gray-bg","lime-bg","green-bg"][k-1]});color:var(--${["red","amber","ink","green","green"][k-1]})">Skala ${k} · ${SKALA[k]}</span>`:"";
+    const mv=pk!=null&&k!=null&&pk!==k?` <span class="${k>pk?"up":"down"}" style="font-size:13px">${k>pk?"naik":"turun"} dari skala ${pk}</span>`:"";
+    return `<tr><td>${t.label}</td><td class="r">${x.prev!=null?fmtV(t,x.prev):"–"}</td><td class="r"><b>${fmtV(t,x.v)}</b> ${t.unit}${t.rel&&r.rel[t.key]!=null?` <span class="sub">(${fmtR(r.rel[t.key])} BB)</span>`:""}</td><td class="r ${cl}">${ch}</td><td>${skTxt}${mv}</td></tr>`}).join("");
+  el.innerHTML=`<div class="dhead"><div class="who"><div class="avatar">${esc(initials(s.nama))}</div><div><h2>${esc(s.nama)}</h2><div class="sub">${esc(s.cabor)} · ${esc(s.kelas||"")}${s.jk?" · "+(s.jk==="P"?"Putri":"Putra"):""} · tes terakhir ${fmtD(r.m._last.tanggal)}${r.m._last.sesi?" ("+esc(r.m._last.sesi).toLowerCase()+")":""}</div></div></div>
+    <select id="tsPick" aria-label="Pilih siswa">${withData.map(x=>`<option value="${x.s.id}" ${x.s.id===s.id?"selected":""}>${esc(x.s.nama)}</option>`).join("")}</select></div>
+    <div class="g2">
+      <div><h3>Profil skala: terbaru vs sebelumnya</h3><div class="cv tall"><canvas id="cProfil" aria-label="Radar profil skala tes"></canvas></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0"><h3>Catatan sport scientist</h3><ul class="reasons">${notes.map(n=>`<li>${n}</li>`).join("")}</ul>
+      <div class="metrics" style="grid-template-columns:repeat(3,minmax(0,1fr))">${[["Performa fisik",r.pct!=null?Math.round(r.pct)+"%":"–"],["Komponen terkuat",kompS.length?kompS[kompS.length-1].k:"–"],["Komponen terlemah",kompS.length?kompS[0].k:"–"]].map(([k,v])=>`<div class="m"><div class="v" style="font-size:${String(v).length>6?"17px":"24px"}">${v}</div><div class="k">${k}</div></div>`).join("")}</div></div>
+    </div>
+    <div class="hmwrap"><table class="ptable" style="min-width:680px"><thead><tr><th>Tes</th><th class="r">Sebelumnya</th><th class="r">Terbaru</th><th class="r">Perubahan</th><th>Skala norma</th></tr></thead><tbody>${rowsT}</tbody></table></div>`;
+  $("#tsPick").onchange=e=>{TS.sel=e.target.value;renderTes()};
+  const hasPrev=Object.keys(r.pk).length>0;
+  const ds=[{label:"Tes terbaru",data:TESTS.map(t=>r.sk[t.key]??null),borderColor:T.accent,backgroundColor:T.accentSoft,borderWidth:2,pointRadius:3,pointBackgroundColor:T.accent}];
+  if(hasPrev)ds.push({label:"Tes sebelumnya",data:TESTS.map(t=>r.pk[t.key]??null),borderColor:T.accent2,borderDash:[4,3],borderWidth:1.5,backgroundColor:"transparent",pointRadius:2,pointBackgroundColor:T.accent2});
+  mkChart("cProfil",{type:"radar",data:{labels:TESTS.map(t=>t.short),datasets:ds},options:{scales:{r:{min:0,max:5,ticks:{stepSize:1,display:true,backdropColor:"transparent",color:T.muted,font:{size:10}},grid:{color:T.line},angleLines:{color:T.line},pointLabels:{color:T.ink,font:{size:11,weight:"600"}}}},
+    plugins:{legend:{display:true,position:"bottom",labels:{boxWidth:12,boxHeight:3,color:T.ink}},tooltip:{callbacks:{label:it=>it.dataset.label+": skala "+it.raw+" ("+SKALA[it.raw]+")"}}}}});
+}
+
+/* ---------- tes fisik: input ---------- */
+function renderTesForm(){
+  const D=inputData();const cur=$("#tsSiswa").value;
+  const grp={};D.siswa.forEach(s=>(grp[s.cabor]=grp[s.cabor]||[]).push(s));
+  $("#tsSiswa").innerHTML=D.siswa.length?'<option value="">Pilih nama…</option>'+Object.keys(grp).sort().map(c=>`<optgroup label="${esc(c)}">${grp[c].sort((a,b)=>a.nama.localeCompare(b.nama)).map(s=>`<option value="${s.id}">${esc(s.nama)}</option>`).join("")}</optgroup>`).join(""):'<option value="">Belum ada siswa, tambahkan di tab Data siswa</option>';
+  if(cur)$("#tsSiswa").value=cur;
+  if(!$("#tsSesi").options.length)$("#tsSesi").innerHTML=SESI.map(s=>`<option>${s}</option>`).join("");
+  if(!$("#tsFields").children.length){
+    $("#tsFields").innerHTML=TESTS.map(t=>`<div class="tf"><div class="top"><span class="lab">${t.label}</span><span class="komp">${t.komp}</span></div><div class="inp"><input type="number" id="ts_${t.key}" step="${t.step}" min="${t.min}" max="${t.max}" inputmode="decimal" aria-label="${t.label} (${t.unit})"><span>${t.unit}</span></div><div class="hint">${t.hint}</div><div class="norm" id="nm_${t.key}"></div><div class="prev" id="pv_${t.key}"></div></div>`).join("");
+  }
+  $("#tsTgl").max=TODAY;if(!$("#tsTgl").value)$("#tsTgl").value=TODAY;
+  updateTesPrev();
+}
+function updateTesPrev(){
+  const sid=$("#tsSiswa").value;const s=inputData().siswa.find(x=>x.id===sid);const M=sid?latestMap(rawData().tes||[])[sid]:null;
+  if(s&&!$("#tsBb").value&&s.bb)$("#tsBb").value=s.bb;
+  const bb=+$("#tsBb").value||(s&&s.bb)||null;const jk=s?s.jk:"L";
+  TESTS.forEach(t=>{
+    const nt=normText(t,jk);$("#nm_"+t.key).innerHTML=`<span class="nlab">Norma ${jk==="P"?"putri":"putra"} (${t.nt})</span>`+nt.map((x,i)=>`<i class="nb s${5-i}" title="Skala ${5-i}: ${x} ${t.nt}"><b>${5-i}</b>${x}</i>`).join("");
+    const el=$("#pv_"+t.key);const x=M&&M[t.key];const inp=$("#ts_"+t.key).value;let out="";
+    if(inp!==""&&s){const k=skalaOf(t,+inp,jk,bb);out+=k?`Hasil ini: <b class="sk s${k}">skala ${k} · ${SKALA[k]}</b>${t.rel&&bb?" ("+fmtR(+inp/bb)+" BB)":""}`:(t.rel?"Isi berat badan untuk menilai tes ini.":"")}
+    if(x){const g=inp!==""?(+inp-x.v)*t.dir:null;out+=(out?"<br>":"")+`Sebelumnya: <b>${fmtV(t,x.v)} ${t.unit}</b> (${fmtD(x.tgl)})`+(g!=null?` · <span class="${g>0?"up":g<0?"down":"flat"}">${g>0?"lebih baik":g<0?"lebih buruk":"sama"}</span>`:"")}
+    else if(sid)out+=(out?"<br>":"")+"Belum pernah dites";
+    el.innerHTML=out;
+  });
+}
+$("#formTes").addEventListener("input",e=>{$("#msgTes").textContent="";if(e.target.id&&(e.target.id.startsWith("ts_")||e.target.id==="tsBb"))updateTesPrev()});
+$("#tsSiswa").addEventListener("change",()=>{$("#tsBb").value="";updateTesPrev()});
+$("#formTes").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const sid=$("#tsSiswa").value,tgl=$("#tsTgl").value,sesi=$("#tsSesi").value;
+  if(!sid)return msg("#msgTes","Pilih nama siswa dulu.");
+  if(!tgl||tgl>TODAY)return msg("#msgTes","Tanggal tes tidak boleh kosong atau di masa depan.");
+  const rec={};
+  for(const t of TESTS){const v=$("#ts_"+t.key).value;if(v==="")continue;const n=+v;if(!isFinite(n)||n<t.min||n>t.max)return msg("#msgTes",`${t.label} di luar rentang wajar (${t.min}–${t.max} ${t.unit}). Periksa lagi angkanya.`);rec[t.key]=n}
+  if(!Object.keys(rec).length)return msg("#msgTes","Isi minimal satu hasil tes.");
+  const bb=$("#tsBb").value;
+  if(TESTS.some(t=>t.rel&&rec[t.key]!=null)&&!bb)return msg("#msgTes","Isi berat badan saat tes. Half squat, bench press, dan deadlift dinilai per kilogram berat badan.");
+  if(bb!==""&&(+bb<25||+bb>200))return msg("#msgTes","Berat badan di luar rentang 25–200 kg.");
+  const id=sid+"_"+tgl;const base={siswaId:sid,tanggal:tgl,sesi,diperbarui:new Date().toISOString()};if(bb!=="")base.bb=+bb;
+  if(S.mode==="live"&&S.db){
+    try{await DB.upsert("tes",{id,...base,...rec});msg("#msgTes",`Tersimpan: ${Object.keys(rec).length} hasil tes. Tes lain pada tanggal yang sama tetap tersimpan.`,true)}
+    catch(err){msg("#msgTes",err&&err.code==="invalid_argument"?"Akun Anda tidak punya izin menyimpan data ini. Hubungi pengelola program.":"Gagal menyimpan. Periksa koneksi lalu coba lagi.");return}
+  }else{const D=rawData();D.tes=D.tes||[];const ex=D.tes.find(x=>x.id===id);if(ex)Object.assign(ex,base,rec);else D.tes.push({id,...base,...rec});msg("#msgTes","Tersimpan di mode contoh (tidak permanen).",true)}
+  TESTS.forEach(t=>$("#ts_"+t.key).value="");updateTesPrev();
+});
+document.querySelector(".seg").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-sub]");if(!b)return;TS.sub=b.dataset.sub;
+  document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+  $("#tesAnalisis").hidden=TS.sub!=="analisis";$("#formTes").hidden=TS.sub!=="input";$("#tesFilters").style.visibility=TS.sub==="analisis"?"visible":"hidden";
+  renderTes();
+});
+$("#tJk").addEventListener("change",e=>{TS.jk=e.target.value;renderTes()});
+$("#tCabor").addEventListener("change",e=>{TS.cabor=e.target.value;renderTes()});
+$("#tTest").addEventListener("change",e=>{TS.test=e.target.value;renderTes()});
+$("#tesMatrix").addEventListener("click",e=>{const b=e.target.closest("button[data-ts]");if(!b)return;TS.sel=b.dataset.ts;renderTes();$("#tesProfil").scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})});
+$("#btnCsvTes").addEventListener("click",async()=>{
+  const D=data();const nm={};D.siswa.forEach(s=>nm[s.id]=s);
+  const q=v=>{const s=String(v??"");return /[",\n;]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+  const head=["tanggal","sesi","nama","jenis_kelamin","cabor","kelas","bb_kg",...TESTS.flatMap(t=>[t.key+"_"+t.unit,t.key+"_skala"]),"performa_persen"];
+  const rows=[...(D.tes||[])].sort((a,b)=>a.tanggal<b.tanggal?-1:1).map(t=>{const s=nm[t.siswaId]||{};const bb=t.bb||s.bb;const sks=TESTS.map(x=>t[x.key]!=null?skalaOf(x,t[x.key],s.jk,bb):null);const v=sks.filter(x=>x!=null);
+    return[t.tanggal,t.sesi,s.nama,s.jk,s.cabor,s.kelas,bb??"",...TESTS.flatMap((x,i)=>[t[x.key]??"",sks[i]??""]),v.length?Math.round(mean(v)/5*100):""].map(q).join(",")});
+  downloadText("tes-fisik-kelas-olahraga-"+TODAY+".csv","﻿"+head.join(",")+"\n"+rows.join("\n"))
+});
+
+/* ---------- dashboard atlet (model fitness–fatigue) ---------- */
+const AT={sel:null};
+function ageOf(s){if(!s.tglLahir)return null;const b=parse(s.tglLahir),n=new Date();let a=n.getFullYear()-b.getFullYear();if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate()))a--;return a}
+function pmc(list){
+  const by={};list.forEach(e=>{by[e.tanggal]=(by[e.tanggal]||0)+(TSS_JAM[+e.rpe]||0)*(+e.durasi||0)/60});
+  const dates=Object.keys(by).sort();if(!dates.length)return[];
+  const lc=Math.exp(-1/42),la=Math.exp(-1/7);let ctl=0,atl=0;const out=[];
+  for(let t=dates[0];t<=TODAY;t=addDays(t,1)){const tss=by[t]||0;ctl=lc*ctl+(1-lc)*tss;atl=la*atl+(1-la)*tss;out.push({t,tss:+tss.toFixed(1),ctl:+ctl.toFixed(1),atl:+atl.toFixed(1),form:+(ctl-atl).toFixed(1),has:by[t]!=null})}
+  return out;
+}
+const FORMZ=[[-60,-30,"High risk","#e0252b"],[-30,-10,"Optimal","#1fa34a"],[-10,5,"Grey zone","#cfcfcf"],[5,40,"Fresh","#1592d0"]];
+const formZone=f=>FORMZ.find(z=>f>=z[0]&&f<z[1])||(f<-30?FORMZ[0]:FORMZ[3]);
+function renderAtlet(){
+  const D=data();const list=[...D.siswa].sort((a,b)=>a.cabor.localeCompare(b.cabor)||a.nama.localeCompare(b.nama));
+  const box=$("#atletBody");
+  if(!list.length){box.innerHTML='<div class="empty">Belum ada siswa. Tambahkan di tab Data siswa.</div>';$("#atPick").innerHTML="";return}
+  if(!list.some(s=>s.id===AT.sel))AT.sel=list[0].id;
+  const grp={};list.forEach(s=>(grp[s.cabor]=grp[s.cabor]||[]).push(s));
+  $("#atPick").innerHTML=Object.keys(grp).map(c=>`<optgroup label="${esc(c)}">${grp[c].map(s=>`<option value="${s.id}" ${s.id===AT.sel?"selected":""}>${esc(s.nama)}</option>`).join("")}</optgroup>`).join("");
+  const s=list.find(x=>x.id===AT.sel);const T=tok();
+  const M=latestMap(D.tes||[]);const r=rowOf(s,M[s.id]||{});
+  const sameJk=D.siswa.filter(x=>x.jk===s.jk).map(x=>rowOf(x,M[x.id]||{}));
+  const jkAvg=sameJk.map(x=>x.pct).filter(v=>v!=null);
+  const age=ageOf(s);const bmi=s.bb&&s.tb?s.bb/(s.tb*s.tb):null;
+  const p=pmc(D.entri.filter(e=>e.siswaId===s.id));const last=p[p.length-1];
+  const fz=last?formZone(last.form):null;
+  const fld=(l,v,u)=>`<div class="xf"><span class="xl">${l}</span><span class="xc">:</span><span class="xv${v?"":" req"}">${v?esc(v):"Wajib diisi"}</span>${u?`<span class="xu">${u}</span>`:""}</div>`;
+  box.innerHTML=`
+  <div class="xhead">
+    <div class="xcol">${fld("Pelatih",s.pelatih)}${fld("Nama atlet",s.nama)}${fld("Cabor",s.cabor)}${fld("Tahun",String(new Date().getFullYear()))}</div>
+    <div class="xcol">${fld("Usia",age!=null?age+" tahun":"")}${fld("Berat badan",s.bb?dec(+s.bb,1):"","kg")}${fld("Tinggi badan",s.tb?dec(+s.tb,2):"","m")}${fld("Gender",s.jk==="P"?"Wanita":s.jk==="L"?"Pria":"")}</div>
+    <div class="xbmi"><svg viewBox="0 0 40 80" width="34" height="68" aria-hidden="true"><circle cx="20" cy="9" r="7" fill="currentColor"/><path d="M9 19h22a4 4 0 0 1 4 4v24a3 3 0 0 1-6 0V27h-1v48a4 4 0 0 1-8 0V50h-2v25a4 4 0 0 1-8 0V27h-1v20a3 3 0 0 1-6 0V23a4 4 0 0 1 4-4z" fill="currentColor"/></svg><div><span class="xl" style="background:none;color:inherit;padding:0">BMI</span><b>${bmi?dec(bmi,1):"–"}</b><small>${bmi?"Bandingkan dengan persentil BMI menurut usia":"Isi berat & tinggi badan"}</small></div></div>
+    <div class="xtiles">
+      <div class="xtile"><b>${r.pct!=null?Math.round(r.pct)+"%":"–"}</b><span>Performa fisik</span></div>
+      <div class="xtile alt"><b>${jkAvg.length?Math.round(mean(jkAvg))+"%":"–"}</b><span>Rata-rata ${s.jk==="P"?"putri":"putra"}</span></div>
+      <div class="xtile" style="--tc:${fz?fz[3]:"#555"}"><b>${last?(last.form>0?"+":"")+Math.round(last.form):"–"}</b><span>Form · ${fz?fz[2]:"belum ada data"}</span></div>
+    </div>
+  </div>
+  <div class="xgrid">
+    <div class="xpanel"><h3>Performa fisik per tes · ${esc(s.nama.replace(" (contoh)",""))}</h3><div class="cv"><canvas id="atPerf" aria-label="Persentase performa per tes"></canvas></div></div>
+    <div class="xpanel"><h3>Training Stress Score · Fitness · Fatigue</h3><div class="cv"><canvas id="atPmc" aria-label="TSS, fitness dan fatigue"></canvas></div></div>
+    <div class="xpanel"><h3>Rata-rata kelas per tes · ${s.jk==="P"?"putri":"putra"}</h3><div class="cv"><canvas id="atAvg" aria-label="Rata-rata kelas per tes"></canvas></div></div>
+    <div class="xpanel"><h3>Form (fitness − fatigue)</h3><div class="cv"><canvas id="atForm" aria-label="Form dan zona risiko"></canvas></div>
+      <div class="legend">${FORMZ.map(z=>`<span><i style="background:${z[3]}"></i>${z[2]} (${z[0]<=-60?"< "+z[1]:z[1]>=40?"> "+z[0]:z[0]+" s/d "+z[1]})</span>`).join("")}</div></div>
+  </div>
+  <div class="xgrid">
+    <div class="xpanel"><h3>Skala intensitas latihan (RPE)</h3><div class="rpeleg">${[...RPE_BAND].reverse().map(b=>`<div><span class="rn" style="background:${b[3]}">${b[0]} - ${b[1]}</span><span class="rl">${b[2]}</span><span class="re">${RPE_EMO[b[1]]}</span></div>`).join("")}</div>
+      <p class="note">Beban harian = TSS per jam menurut RPE × durasi. RPE 1→20, 2→30, 3→40, 4→50, 5→60, 6→70, 7→80, 8→100, 9→120, 10→140 TSS/jam.</p></div>
+    <div class="xpanel"><h3>Zona denyut jantung latihan${age!=null?" · HRmax ≈ "+Math.round(208-0.7*age)+" bpm":""}</h3><div class="hrz">${[["Z5",90,100,"Meningkatkan kecepatan sprint maksimal","#ff3b30"],["Z4",80,90,"Meningkatkan kapasitas performa maksimal","#ff8c3a"],["Z3",70,80,"Meningkatkan kebugaran aerobik","#7ed957"],["Z2",60,70,"Meningkatkan daya tahan dasar","#12c0e0"],["Z1",50,60,"Membantu pemulihan","#d9d9d9"]].map(([z,a,b,m,c])=>{const hr=age!=null?208-0.7*age:null;return `<div><span class="zc" style="background:${c}">${z}</span><span class="zt" style="border-color:${c}"><b>${a}–${b}% HRmax${hr?` · ${Math.round(hr*a/100)}–${Math.round(hr*b/100)} bpm`:""}</b><small>${m}</small></span></div>`}).join("")}</div>
+      <p class="note">HRmax diestimasi dengan rumus Tanaka (208 − 0,7 × usia). Hasil tes HRmax langsung lebih akurat.</p></div>
+  </div>`;
+  const perfData=(row)=>TESTS.map(t=>row.sk[t.key]!=null?row.sk[t.key]*20:null);
+  const cyl=(id,vals,colors)=>mkChart(id,{type:"bar",data:{labels:TESTS.map(t=>t.short),datasets:[{data:vals,backgroundColor:colors,borderRadius:{topLeft:8,topRight:8,bottomLeft:8,bottomRight:8},borderSkipped:false,barPercentage:.62,grouped:false,order:1},{data:TESTS.map(()=>100),backgroundColor:"rgba(160,160,160,.22)",borderRadius:8,borderSkipped:false,barPercentage:.62,grouped:false,order:2}]},
+    options:{scales:{x:axis(T,{grid:{display:false},ticks:{color:T.ink,maxRotation:45,minRotation:45,autoSkip:false,font:{size:10}}}),y:axis(T,{min:0,max:100,ticks:{stepSize:20,callback:v=>v+"%",color:T.muted}})},plugins:{tooltip:{filter:it=>it.datasetIndex===0,callbacks:{label:it=>it.raw==null?"Belum dites":it.raw+"% · skala "+it.raw/20+" ("+SKALA[it.raw/20]+")"}}}}});
+  cyl("atPerf",perfData(r),TESTS.map(t=>r.sk[t.key]?T.cat[r.sk[t.key]-1]:T.accent2));
+  const avg=TESTS.map(t=>{const v=sameJk.map(x=>x.sk[t.key]).filter(x=>x!=null);return v.length?+(mean(v)*20).toFixed(0):null});
+  cyl("atAvg",avg,TESTS.map(()=>s.jk==="P"?"#ff6b8a":"#5aa9ff"));
+  const win=p.slice(-90);const labels=win.map(d=>fmtD(d.t));
+  mkChart("atPmc",{type:"bar",data:{labels,datasets:[{type:"bar",label:"Training Stress Score",data:win.map(d=>d.tss),backgroundColor:"rgba(190,225,255,.85)",borderRadius:2,order:3},{type:"line",label:"Fitness",data:win.map(d=>d.ctl),borderColor:"#ffd400",borderWidth:2,pointRadius:0,tension:.25,order:1},{type:"line",label:"Fatigue",data:win.map(d=>d.atl),borderColor:"#ff2a2a",borderWidth:2,pointRadius:0,tension:.25,order:2}]},
+    options:{interaction:{mode:"index",intersect:false},scales:{x:axis(T,{grid:{display:false},ticks:{maxTicksLimit:8,maxRotation:0,color:T.muted}}),y:axis(T,{beginAtZero:true,ticks:{maxTicksLimit:6,color:T.muted}})},plugins:{legend:{display:true,position:"top",labels:{boxWidth:12,boxHeight:3,color:T.ink}}}}});
+  mkChart("atForm",{type:"line",data:{labels,datasets:[{label:"Form",data:win.map(d=>d.form),borderColor:"#000",borderWidth:2.5,pointRadius:0,tension:.25}]},
+    options:{interaction:{mode:"index",intersect:false},scales:{x:axis(T,{grid:{display:false},ticks:{maxTicksLimit:8,maxRotation:0,color:T.muted}}),y:axis(T,{min:-50,max:30,grid:{display:false},ticks:{stepSize:10,color:T.muted}})},
+      plugins:{zones:FORMZ.map(z=>({y:[Math.max(-50,z[0]),Math.min(30,z[1])],c:z[3]})),tooltip:{callbacks:{label:it=>{const z=formZone(it.raw);return"Form "+(it.raw>0?"+":"")+it.raw+" · "+z[2]}}}}}});
+}
+$("#atPick").addEventListener("change",e=>{AT.sel=e.target.value;renderAtlet()});
+
+/* ---------- siswa ---------- */
+const SE={edit:null};
+function renderSiswa(){
+  const D=inputData();
+  $("#caborList").innerHTML=["Sepak bola","Bola voli","Bola basket","Atletik","Bulu tangkis","Pencak silat","Renang","Sepak takraw","Futsal","Karate","Taekwondo","Rugby"].map(c=>`<option value="${c}">`).join("");
+  const ro=ME.role==="guru";
+  $("#siswaList").innerHTML=D.siswa.length?`<div class="row head" style="grid-template-columns:minmax(0,1fr) 120px 150px 80px"><span>Nama</span><span>Cabor</span><span>Kelas · BB · TB</span><span></span></div>`+[...D.siswa].sort((a,b)=>a.cabor.localeCompare(b.cabor)||a.nama.localeCompare(b.nama)).map(s=>`<div class="row" style="grid-template-columns:minmax(0,1fr) 120px 150px 80px;cursor:default"><span class="nm" style="display:flex;gap:10px;align-items:center"><span class="avatar" style="width:32px;height:32px;font-size:14px">${esc(initials(s.nama))}</span><span>${esc(s.nama)}<small>${esc(s.pelatih||"Pelatih belum diisi")}${ageOf(s)!=null?" · "+ageOf(s)+" th":""}</small></span></span><span>${esc(s.cabor)}</span><span>${esc(s.kelas||"–")}${s.jk?" · "+(s.jk==="P"?"Pi":"Pa"):""} · ${s.bb?dec(+s.bb,1)+" kg":"BB –"} · ${s.tb?dec(+s.tb,2)+" m":"TB –"}</span><span>${ro?"":`<button type="button" class="btn ghost sm" data-edit="${s.id}">Ubah</button>`}</span></div>`).join(""):`<div class="empty">Belum ada siswa. Tambahkan lewat formulir di atas.</div>`;
+}
+$("#siswaList").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-edit]");if(!b)return;const s=inputData().siswa.find(x=>x.id===b.dataset.edit);if(!s)return;
+  SE.edit=s.id;$("#sNama").value=s.nama;$("#sCabor").value=s.cabor;$("#sKelas").value=s.kelas||"";$("#sJk").value=s.jk||"";$("#sPelatih").value=s.pelatih||"";$("#sLahir").value=s.tglLahir||"";$("#sBb").value=s.bb||"";$("#sTb").value=s.tb||"";
+  $("#siswaFormTitle").textContent="Ubah data "+s.nama;$("#siswaSubmit").textContent="Simpan perubahan";$("#siswaCancel").hidden=false;$("#formSiswa").scrollIntoView({block:"start"});
+});
+function resetSiswaForm(){SE.edit=null;["#sNama","#sKelas","#sJk","#sPelatih","#sLahir","#sBb","#sTb"].forEach(x=>$(x).value="");$("#siswaFormTitle").textContent="Tambah siswa";$("#siswaSubmit").textContent="Tambah siswa";$("#siswaCancel").hidden=true}
+$("#siswaCancel").addEventListener("click",()=>{resetSiswaForm();$("#msgSiswa").textContent=""});
+
+/* ---------- input ---------- */
+const F={sid:"",cabor:"",w:{},nyeri:0,area:[],rpe:null};
+function buildInput(){
+  $("#wellBox").innerHTML=WELL.map(([k,l,sub,d])=>`<div class="wrow"><div class="q">${l}<small>${sub}</small></div><div class="five" role="group" aria-label="${l}">${d.map((t,i)=>`<button type="button" data-k="${k}" data-v="${i+1}" aria-pressed="false"><span class="v">${i+1}</span><span class="d">${t}</span></button>`).join("")}</div></div>`).join("");
+  $("#inRpe").innerHTML=RPE.map((t,i)=>`<button type="button" data-v="${i}" style="--rc:${i?rpeColor(i):"#444"}" aria-pressed="false"><b>${i}</b><span>${RPE_EMO[i]} ${t}</span></button>`).join("");
+  $("#inArea").innerHTML=AREAS.map(a=>`<button type="button" class="chip small" data-a="${a}" aria-pressed="false">${a}</button>`).join("");
+  $("#durQuick").innerHTML=[0,45,60,90,120].map(v=>`<button type="button" class="chip small" data-q="${v}">${v===0?"Libur":v+" mnt"}</button>`).join("");
+  $("#inTgl").value=TODAY;$("#inTgl").max=TODAY;
+}
+function renderPicker(){
+  const D=inputData();const q=$("#inCari").value.trim().toLowerCase();
+  const cabs=[...new Set(D.siswa.map(s=>s.cabor))].sort();
+  $("#inCabor").innerHTML=cabs.length?[`<button type="button" class="chip small" data-c="" aria-pressed="${!F.cabor}">Semua</button>`].concat(cabs.map(c=>`<button type="button" class="chip small" data-c="${esc(c)}" aria-pressed="${F.cabor===c}">${esc(c)}</button>`)).join(""):"";
+  const list=D.siswa.filter(s=>(!F.cabor||s.cabor===F.cabor)&&(!q||s.nama.toLowerCase().includes(q))).sort((a,b)=>a.nama.localeCompare(b.nama));
+  $("#inSiswa").innerHTML=D.siswa.length?(list.length?list.map(s=>`<button type="button" class="chip" data-s="${s.id}" aria-pressed="${F.sid===s.id}">${esc(s.nama)}</button>`).join(""):'<span class="note">Tidak ada nama yang cocok.</span>'):'<span class="note">Belum ada siswa. Tambahkan dulu di tab Data siswa.</span>';
+}
+function gauge(v){
+  const T=tok();const cx=120,cy=118,r=92;
+  const ang=x=>Math.PI*(1-(x-5)/20);
+  const pt=(x,rr)=>[cx+rr*Math.cos(ang(x)),cy-rr*Math.sin(ang(x))];
+  const arc=(a,b,c)=>{const p1=pt(a,r),p2=pt(b,r);return `<path d="M${p1[0].toFixed(1)} ${p1[1].toFixed(1)} A${r} ${r} 0 0 1 ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}" stroke="${c}" stroke-width="16" fill="none"/>`};
+  let g=arc(5,10,T.redBg)+arc(10,13,T.amberBg)+arc(13,25,T.greenBg);
+  if(v!=null){const col=v<=10?T.red:v<=13?T.amber:T.green;g+=arc(5,Math.max(5.2,v),col);const p=pt(v,r);g+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="9" fill="${T.surface}" stroke="${col}" stroke-width="3"/>`}
+  g+=`<text x="${cx}" y="${cy-18}" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="40" fill="${T.ink}">${v??"–"}</text><text x="${cx}" y="${cy+2}" text-anchor="middle" font-size="12" fill="${T.muted}">wellness / 25</text><text x="${cx-r}" y="${cy+18}" text-anchor="middle" font-size="11" fill="${T.muted}">5</text><text x="${cx+r}" y="${cy+18}" text-anchor="middle" font-size="11" fill="${T.muted}">25</text>`;
+  $("#gauge").innerHTML=g;
+}
+function updateSummary(){
+  const D=inputData();const s=D.siswa.find(x=>x.id===F.sid);
+  $("#sumWho").innerHTML=s?`<b style="color:var(--ink)">${esc(s.nama)}</b><br>${esc(s.cabor)} · ${fmtD($("#inTgl").value||TODAY)}`:"Belum memilih siswa";
+  const nW=Object.keys(F.w).length;const wt=nW===5?Object.values(F.w).reduce((a,b)=>a+b,0):null;
+  gauge(wt);
+  const dur=$("#inDur").value;
+  $("#sumLoad").textContent=F.rpe!=null&&dur!==""?(F.rpe*+dur).toLocaleString("id-ID")+" AU":"–";
+  $("#sumNyeri").textContent=F.nyeri+"/10"+(F.area.length?" · "+F.area.length+" area":"");
+  const done=[!!F.sid,nW===5,true,F.rpe!=null&&dur!==""];
+  $("#sumDone").textContent=done.filter(Boolean).length+"/4";
+  ["st1","st2","st3","st4"].forEach((id,i)=>$("#"+id).classList.toggle("done",done[i]&&(i!==2||nW===5)));
+  let f="";if(wt!=null&&wt<=10)f='<span class="pill p-merah">Wellness rendah, pelatih akan diberi tahu</span>';else if((wt!=null&&wt<=13)||F.nyeri>=3)f='<span class="pill p-kuning">Perlu perhatian pelatih</span>';else if(wt!=null)f='<span class="pill p-hijau">Kondisi baik</span>';
+  $("#sumFlag").innerHTML=f;
+}
+function painColor(){const T=tok();const v=F.nyeri;$("#inNyeri").style.setProperty("--pc",v>=6?T.red:v>=3?T.amber:T.accent);$("#nyeriVal").style.color=v>=6?"var(--red)":v>=3?"var(--amber)":"var(--ink)";$("#areaBox").hidden=v===0}
+
+$("#v-input").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.k){F.w[b.dataset.k]=+b.dataset.v;b.parentElement.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b))}
+  else if(b.dataset.s!==undefined){F.sid=b.dataset.s;renderPicker()}
+  else if(b.dataset.c!==undefined){F.cabor=b.dataset.c;renderPicker()}
+  else if(b.dataset.a){const a=b.dataset.a;F.area=F.area.includes(a)?F.area.filter(x=>x!==a):F.area.concat(a);b.setAttribute("aria-pressed",F.area.includes(a))}
+  else if(b.dataset.q!==undefined){$("#inDur").value=b.dataset.q;if(+b.dataset.q===0){F.rpe=0;$("#inRpe").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.v==="0"))}}
+  else if(b.dataset.d){const v=Math.max(0,Math.min(400,(+$("#inDur").value||0)+(+b.dataset.d)));$("#inDur").value=v}
+  else if(b.closest("#inRpe")){F.rpe=+b.dataset.v;$("#inRpe").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b))}
+  else return;
+  $("#msgEntri").textContent="";updateSummary();
+});
+$("#inCari").addEventListener("input",renderPicker);
+$("#inNyeri").addEventListener("input",e=>{F.nyeri=+e.target.value;$("#nyeriVal").textContent=F.nyeri;painColor();updateSummary()});
+["#inDur","#inTgl","#inTinggi"].forEach(s=>$(s).addEventListener("input",()=>{$("#msgEntri").textContent="";updateSummary()}));
+
+function msg(id,t,ok){const m=$(id);m.textContent=t;m.className="msg "+(ok?"ok":"err")}
+$("#formEntri").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const tgl=$("#inTgl").value;
+  if(!F.sid)return msg("#msgEntri","Pilih nama siswa dulu.");
+  if(!tgl||tgl>TODAY)return msg("#msgEntri","Tanggal tidak boleh kosong atau di masa depan.");
+  const miss=WELL.filter(([k])=>!F.w[k]);if(miss.length)return msg("#msgEntri","Lengkapi kondisi pagi: "+miss.map(m=>m[1].toLowerCase()).join(", ")+".");
+  if(F.rpe==null)return msg("#msgEntri","Pilih tingkat berat latihan (RPE).");
+  const dur=$("#inDur").value;if(dur===""||+dur<0||+dur>400)return msg("#msgEntri","Isi durasi 0–400 menit.");
+  const ent={siswaId:F.sid,tanggal:tgl,rpe:F.rpe,durasi:+dur,nyeri:F.nyeri,area:F.nyeri>0?F.area:[],...F.w,dibuat:new Date().toISOString()};
+  const ti=$("#inTinggi").value;if(ti!==""){if(+ti<100||+ti>230)return msg("#msgEntri","Tinggi badan di luar rentang 100–230 cm.");ent.tinggi=+(+ti).toFixed(1)}
+  const id=F.sid+"_"+tgl;
+  if(S.mode==="live"&&S.db){
+    try{await DB.upsert("entri",{id,...ent});msg("#msgEntri","Tersimpan. Mengisi ulang tanggal yang sama akan mengganti entri ini.",true)}
+    catch(err){msg("#msgEntri",err&&err.code==="invalid_argument"?"Akun Anda tidak punya izin menyimpan data ini. Hubungi pengelola program.":err&&err.code==="quota_exceeded"?"Penyimpanan penuh. Hubungi pengelola untuk menghapus data lama.":"Gagal menyimpan. Periksa koneksi lalu coba lagi.");return}
+  }else{const D=rawData();D.entri=D.entri.filter(x=>x.id!==id);D.entri.push({id,...ent});msg("#msgEntri","Tersimpan di mode contoh (tidak permanen).",true)}
+  F.w={};F.rpe=null;F.nyeri=0;F.area=[];
+  document.querySelectorAll("#wellBox button,#inRpe button,#inArea button").forEach(b=>b.setAttribute("aria-pressed","false"));
+  $("#inNyeri").value=0;$("#nyeriVal").textContent="0";$("#inDur").value="";$("#inTinggi").value="";painColor();updateSummary();renderDash();
+});
+
+/* ---------- tambah siswa ---------- */
+$("#formSiswa").addEventListener("input",()=>$("#msgSiswa").textContent="");
+$("#formSiswa").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const nama=$("#sNama").value.trim(),cabor=$("#sCabor").value.trim(),kelas=$("#sKelas").value.trim(),jk=$("#sJk").value,pelatih=$("#sPelatih").value.trim(),tglLahir=$("#sLahir").value,bb=$("#sBb").value,tb=$("#sTb").value;
+  if(nama.length<2)return msg("#msgSiswa","Isi nama lengkap siswa.");
+  if(!cabor)return msg("#msgSiswa","Isi cabang olahraga.");
+  if(!jk)return msg("#msgSiswa","Pilih gender. Norma tes fisik putra dan putri berbeda.");
+  if(tglLahir&&(tglLahir>TODAY||diffDays(TODAY,tglLahir)<365*8))return msg("#msgSiswa","Tanggal lahir tidak wajar. Periksa lagi.");
+  if(bb!==""&&(+bb<25||+bb>200))return msg("#msgSiswa","Berat badan di luar rentang 25–200 kg.");
+  if(tb!==""&&(+tb<1||+tb>2.3))return msg("#msgSiswa","Tinggi badan diisi dalam meter, misalnya 1,68.");
+  const D=inputData();if(D.siswa.some(s=>s.id!==SE.edit&&s.nama.toLowerCase()===nama.toLowerCase()))return msg("#msgSiswa","Nama ini sudah terdaftar.");
+  const doc={nama,cabor,kelas,jk,pelatih,tglLahir:tglLahir||null,bb:bb===""?null:+bb,tb:tb===""?null:+tb};
+  const editing=SE.edit;
+  if(S.mode==="live"&&S.db){
+    try{if(editing)await DB.update("siswa",editing,doc);else await DB.insert("siswa",{...doc,dibuat:new Date().toISOString()});msg("#msgSiswa",editing?"Perubahan tersimpan.":nama+" ditambahkan.",true)}
+    catch(err){msg("#msgSiswa",err&&err.code==="invalid_argument"?"Akun Anda tidak punya izin menyimpan data ini. Hubungi pengelola program.":"Gagal menyimpan. Periksa koneksi lalu coba lagi.");return}
+  }else{const R=rawData();if(editing){Object.assign(R.siswa.find(s=>s.id===editing),doc)}else R.siswa.push({id:"tmp"+Date.now(),...doc});msg("#msgSiswa",(editing?"Perubahan tersimpan":nama+" ditambahkan")+" di mode contoh (tidak permanen).",true);renderAll()}
+  resetSiswaForm();
+});
+
+/* ---------- CSV ---------- */
+$("#btnCsv").addEventListener("click",async()=>{
+  const D=data();const nm={};D.siswa.forEach(s=>nm[s.id]=s);
+  const head=["tanggal","nama","cabor","kelas",...WELL.map(w=>w[0]),"wellness_total","nyeri","area_nyeri","rpe","durasi_menit","beban_srpe","tinggi_cm"];
+  const q=v=>{const s=String(v??"");return /[",\n;]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+  const rows=[...D.entri].sort((a,b)=>a.tanggal<b.tanggal?-1:1).map(e=>{const s=nm[e.siswaId]||{};return[e.tanggal,s.nama,s.cabor,s.kelas,...WELL.map(w=>e[w[0]]),wellTotal(e),e.nyeri,(e.area||[]).join(" / "),e.rpe,e.durasi,loadOf(e),e.tinggi??""].map(q).join(",")});
+  downloadText("monitoring-kelas-olahraga-"+TODAY+".csv","﻿"+head.join(",")+"\n"+rows.join("\n"))
+});
+
+/* ---------- navigasi ---------- */
+document.querySelector(".tabs").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-tab]");if(!b)return;S.tab=b.dataset.tab;
+  document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  ["atlet","dash","input","tes","siswa","akses"].forEach(t=>$("#v-"+t).hidden=t!==S.tab);
+  if(S.tab==="atlet")renderAtlet();
+  if(S.tab==="dash")renderDash();
+  if(S.tab==="tes")renderTes();
+  if(S.tab==="akses"){renderAkses();loadProfil()}
+  try{localStorage.setItem("tab",S.tab)}catch(_){}
+});
+$("#kpis").addEventListener("click",e=>{const b=e.target.closest(".kpi");if(!b)return;S.filter=S.filter===b.dataset.f?"semua":b.dataset.f;renderDash()});
+$("#fCabor").addEventListener("change",e=>{S.cabor=e.target.value;renderDash()});
+$("#list").addEventListener("click",e=>{const r=e.target.closest(".row[data-id]");if(!r)return;S.sel=S.sel===r.dataset.id?null:r.dataset.id;renderDash();if(S.sel)scrollDetail()});
+
+function renderAll(){if(!S.entered)return;banner();if(S.tab==="atlet")renderAtlet();if(S.tab==="dash")renderDash();if(S.tab==="tes")renderTes();if(S.tab==="akses")renderAkses();renderPicker();renderSiswa();updateSummary()}
+/* ---------- penyimpanan (Supabase) ---------- */
+const CFG=window.MONITOR_CONFIG||{};
+const SB_MAP={siswa:{tglLahir:"tgl_lahir"},entri:{siswaId:"siswa_id"},tes:{siswaId:"siswa_id"}};
+function toRow(table,o){const m=SB_MAP[table]||{};const r={};for(const k in o){if(o[k]===undefined)continue;r[m[k]||k]=o[k]}return r}
+function fromRow(table,r){const m=SB_MAP[table]||{};const inv={};for(const k in m)inv[m[k]]=k;const o={};for(const k in r){if(r[k]===null)continue;o[inv[k]||k]=r[k]}return o}
+function dbErr(e){const err=new Error(e&&e.message||"Gagal");err.code=(e&&(e.code==="42501"||/row-level security|permission denied/i.test(e.message||"")))?"invalid_argument":"unavailable";return err}
+const DB={
+  async loadAll(table,filter){
+    const out=[];for(let from=0;;from+=1000){let q=S.db.from(table).select("*").range(from,from+999);if(filter)q=filter(q);const{data,error}=await q;if(error)throw dbErr(error);out.push(...data.map(x=>fromRow(table,x)));if(data.length<1000)break}
+    return out;
+  },
+  async upsert(table,o){const{error}=await S.db.from(table).upsert(toRow(table,o));if(error)throw dbErr(error);DB.refresh(table)},
+  async insert(table,o){const{error}=await S.db.from(table).insert(toRow(table,o));if(error)throw dbErr(error);DB.refresh(table)},
+  async update(table,id,o){const{error}=await S.db.from(table).update(toRow(table,o)).eq("id",id);if(error)throw dbErr(error);DB.refresh(table)},
+  timers:{},
+  refresh(table,delay){clearTimeout(DB.timers[table]);DB.timers[table]=setTimeout(()=>DB.fetch(table),delay||150)},
+  async fetch(table){
+    try{
+      if(table==="siswa")S.live.siswa=await DB.loadAll("siswa");
+      else if(table==="entri")S.live.entri=await DB.loadAll("entri",q=>q.gte("tanggal",addDays(TODAY,-120)));
+      else if(table==="tes")S.live.tes=await DB.loadAll("tes");
+      else if(table==="profil"){await loadProfil();return}
+      if(S.entered)renderAll();
+    }catch(e){const b=$("#banner");b.hidden=false;b.textContent="Gagal memuat data. Periksa koneksi internet lalu muat ulang halaman."}
+  }
+};
+function downloadText(filename,text){
+  try{const blob=new Blob([text],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}catch(_){}
+}
+
+/* ---------- masuk & peran ---------- */
+const ROLE_LABEL={admin:"Pengelola",pelatih:"Pelatih",guru:"Guru",menunggu:"Menunggu"};
+const ROLE_DESC={admin:"Akses penuh, termasuk mengatur pengguna",pelatih:"Input dan analisis siswa cabor sendiri",guru:"Melihat dashboard dan hasil tes"};
+S.entered=false;S.profil=[];
+const LG={mode:"masuk",busy:false,info:""};
+const ssGet=k=>{try{return sessionStorage.getItem(k)}catch(_){return null}};
+const ssSet=(k,v)=>{try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(_){}};
+
+function loginForm(){
+  const m=LG.mode;
+  const title={masuk:"Masuk",daftar:"Daftar akun baru",lupa:"Lupa kata sandi",reset:"Atur kata sandi baru"}[m];
+  $(".login h2").textContent=title;
+  const f=[];
+  if(m==="daftar")f.push('<label class="fl">Nama lengkap<input type="text" id="lgNama" autocomplete="name"></label>');
+  if(m!=="reset")f.push('<label class="fl">Email<input type="email" id="lgEmail" autocomplete="email" placeholder="nama@sekolah.sch.id"></label>');
+  if(m==="masuk"||m==="daftar"||m==="reset")f.push(`<label class="fl">${m==="reset"?"Kata sandi baru":"Kata sandi"}<input type="password" id="lgPass" autocomplete="${m==="masuk"?"current-password":"new-password"}"></label>`);
+  if(m==="daftar"||m==="reset")f.push('<label class="fl">Ulangi kata sandi<input type="password" id="lgPass2" autocomplete="new-password"></label>');
+  const btn={masuk:"Masuk",daftar:"Daftar",lupa:"Kirim tautan atur ulang",reset:"Simpan kata sandi"}[m];
+  const links=m==="masuk"?'<button type="button" class="lnk" data-lg="lupa">Lupa kata sandi?</button><button type="button" class="lnk" data-lg="daftar">Belum punya akun? Daftar</button>':m==="reset"?"":'<button type="button" class="lnk" data-lg="masuk">Kembali ke halaman masuk</button>';
+  return `<form id="lgForm" class="lgform" novalidate>${f.join("")}<button class="btn block" type="submit" ${LG.busy?"disabled":""}>${LG.busy?"Memproses…":btn}</button><p class="msg ${LG.info&&LG.info.startsWith("✓")?"ok":"err"}" id="lgMsg" role="status">${esc(LG.info.replace(/^✓ /,""))}</p><div class="lnks">${links}</div></form>`;
+}
+function renderLogin(){
+  const b=$("#loginBody");
+  if(ME.state==="checking"){$(".login h2").textContent="Masuk";b.innerHTML='<p class="sub">Memeriksa sesi…</p>';return}
+  if(S.mode==="demo"){
+    $(".login h2").textContent="Mode contoh";
+    b.innerHTML=`<p class="sub" style="margin:0">Aplikasi belum terhubung ke database, jadi login belum aktif. Pilih peran untuk mencoba tampilan dengan data contoh.</p>
+    <div class="rolepick">${[["admin","","Pengelola / sport scientist"],["pelatih","Sepak bola","Pelatih sepak bola"],["guru","","Guru / wali kelas"]].map(([r,c,l])=>`<button type="button" data-demo-role="${r}" data-demo-cabor="${c}"><b>${l}</b><span>${r==="pelatih"?"Hanya siswa sepak bola":ROLE_DESC[r]}</span></button>`).join("")}</div>`;
+    return;
+  }
+  if(ME.state==="signedout"){b.innerHTML=loginForm();const first=b.querySelector("input");if(first&&!LG.info)first.focus();return}
+  // sudah masuk
+  b.innerHTML="";
+  const box=document.createElement("div");box.className="acct";
+  const av=document.createElement("div");av.className="avatar";av.textContent=initials(ME.name||ME.email||"?");box.appendChild(av);
+  const t=document.createElement("div");t.style.minWidth="0";const n=document.createElement("div");n.className="n";n.textContent=ME.name||"Pengguna";const e=document.createElement("div");e.className="e";e.textContent=ME.email||"";t.append(n,e);box.appendChild(t);b.appendChild(box);
+  if(ME.state==="pending"){
+    const a=document.createElement("div");a.className="alert";a.innerHTML="<b>Akun menunggu persetujuan.</b> Pengelola program perlu menetapkan peran Anda (pelatih atau guru) sebelum dashboard bisa dibuka. Muat ulang halaman setelah disetujui.";b.appendChild(a);
+  }else{
+    const info=document.createElement("div");info.className="sumrow";info.style.borderTop="0";
+    info.innerHTML=`<span>Peran</span><span class="pill r-${ME.role}">${ROLE_LABEL[ME.role]}${ME.role==="pelatih"&&ME.cabor.length?" · "+esc(ME.cabor.join(", ")):""}</span>`;b.appendChild(info);
+    const btn=document.createElement("button");btn.type="button";btn.className="btn block";btn.textContent="Buka dashboard";btn.onclick=enterApp;b.appendChild(btn);
+  }
+  const out=document.createElement("button");out.type="button";out.className="lnk";out.textContent="Keluar dari akun";out.onclick=signOut;b.appendChild(out);
+}
+$("#loginBody").addEventListener("click",e=>{
+  const l=e.target.closest("button[data-lg]");if(l){LG.mode=l.dataset.lg;LG.info="";renderLogin();return}
+  const b=e.target.closest("button[data-demo-role]");if(!b)return;
+  ME.role=b.dataset.demoRole;ME.cabor=b.dataset.demoCabor?[b.dataset.demoCabor]:[];ME.name="Pengguna contoh";ME.state="ok";
+  ssSet("demoRole",ME.role+"|"+(b.dataset.demoCabor||""));enterApp();
+});
+$("#loginBody").addEventListener("submit",async e=>{
+  if(e.target.id!=="lgForm")return;e.preventDefault();if(LG.busy)return;
+  const v=id=>{const x=$("#"+id);return x?x.value.trim():""};
+  const email=v("lgEmail"),pass=$("#lgPass")?$("#lgPass").value:"",pass2=$("#lgPass2")?$("#lgPass2").value:"",nama=v("lgNama");
+  const fail=t=>{LG.info=t;renderLogin()};
+  if(LG.mode!=="reset"&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return fail("Isi alamat email yang valid.");
+  if(LG.mode==="daftar"&&nama.length<2)return fail("Isi nama lengkap.");
+  if((LG.mode==="daftar"||LG.mode==="reset")&&pass.length<8)return fail("Kata sandi minimal 8 karakter.");
+  if((LG.mode==="daftar"||LG.mode==="reset")&&pass!==pass2)return fail("Kedua kata sandi tidak sama.");
+  if(LG.mode==="masuk"&&!pass)return fail("Isi kata sandi.");
+  LG.busy=true;LG.info="";renderLogin();
+  try{
+    const here=location.href.split("#")[0];
+    if(LG.mode==="masuk"){const{error}=await S.db.auth.signInWithPassword({email,password:pass});if(error)throw error;LG.busy=false;await afterSignIn(true);return}
+    if(LG.mode==="daftar"){const{data,error}=await S.db.auth.signUp({email,password:pass,options:{data:{nama},emailRedirectTo:here}});if(error)throw error;LG.busy=false;
+      if(data.session){await afterSignIn(false)}else{LG.mode="masuk";LG.info="✓ Pendaftaran berhasil. Buka email Anda dan klik tautan konfirmasi, lalu masuk di sini."}renderLogin();return}
+    if(LG.mode==="lupa"){const{error}=await S.db.auth.resetPasswordForEmail(email,{redirectTo:here});if(error)throw error;LG.busy=false;LG.mode="masuk";LG.info="✓ Jika email terdaftar, tautan untuk mengatur ulang kata sandi sudah dikirim.";renderLogin();return}
+    if(LG.mode==="reset"){const{error}=await S.db.auth.updateUser({password:pass});if(error)throw error;LG.busy=false;LG.mode="masuk";LG.info="";await afterSignIn(true);return}
+  }catch(err){
+    LG.busy=false;const m=(err&&err.message)||"";
+    LG.info=/invalid login/i.test(m)?"Email atau kata sandi salah.":/not confirmed/i.test(m)?"Email belum dikonfirmasi. Buka tautan di email pendaftaran Anda.":/already registered|already exists/i.test(m)?"Email ini sudah terdaftar. Silakan masuk atau gunakan Lupa kata sandi.":/rate limit|too many/i.test(m)?"Terlalu banyak percobaan. Tunggu beberapa menit lalu coba lagi.":/fetch|network/i.test(m)?"Tidak dapat terhubung ke server. Periksa koneksi internet.":"Gagal: "+m;
+    renderLogin();
+  }
+});
+async function loadMe(){
+  const{data:{user}}=await S.db.auth.getUser();
+  if(!user){ME.state="signedout";ME.id=null;ME.role=null;return}
+  ME.id=user.id;ME.email=user.email;
+  const{data:p}=await S.db.from("profil").select("*").eq("id",user.id).maybeSingle();
+  ME.name=(p&&p.nama)||(user.user_metadata&&user.user_metadata.nama)||"";
+  ME.role=p&&p.role&&p.role!=="menunggu"?p.role:null;ME.cabor=(p&&p.cabor)||[];
+  ME.state=ME.role?"ok":"pending";
+}
+async function afterSignIn(autoEnter){
+  await loadMe();
+  if(ME.state==="ok"){await Promise.all(["siswa","entri","tes"].map(DB.fetch));startRealtime();if(autoEnter){enterApp();return}}
+  renderLogin();
+}
+async function signOut(){try{await S.db.auth.signOut()}catch(_){}S.entered=false;ME.state="signedout";ME.role=null;ME.id=null;LG.mode="masuk";LG.info="";S.live={siswa:[],entri:[],tes:[]};$("#app").hidden=true;$("#home").hidden=false;renderLogin()}
+let rtStarted=false;
+function startRealtime(){
+  if(rtStarted||!S.db.channel)return;rtStarted=true;
+  try{S.db.channel("monitor").on("postgres_changes",{event:"*",schema:"public"},p=>{if(["siswa","entri","tes","profil"].includes(p.table))DB.refresh(p.table,600)}).subscribe()}catch(_){}
+}
+function applyRoleUI(){
+  const ro=ME.role==="guru",admin=ME.role==="admin";
+  $("#tab-input").hidden=ro;$("#tab-akses").hidden=!admin;
+  document.querySelector('.seg button[data-sub="input"]').hidden=ro;
+  $("#formSiswa").hidden=ro;
+  if((ro&&(S.tab==="input"))||(!admin&&S.tab==="akses"))S.tab="atlet";
+  if(ro&&TS.sub==="input"){TS.sub="analisis";document.querySelector('.seg button[data-sub="analisis"]').click()}
+  const u=$("#uchip");u.innerHTML="";const av=document.createElement("span");av.className="avatar";av.style.cssText="width:26px;height:26px;font-size:12px";av.textContent=initials(ME.name||ME.email||"?");u.appendChild(av);
+  const t=document.createElement("span");t.textContent=(ME.name||"Anda")+" ";const sm=document.createElement("small");sm.textContent="· "+ROLE_LABEL[ME.role]+(ME.role==="pelatih"&&ME.cabor.length?" "+ME.cabor.join(", "):"");t.appendChild(sm);u.appendChild(t);
+  document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected",x.dataset.tab===S.tab));
+  ["atlet","dash","input","tes","siswa","akses"].forEach(t=>$("#v-"+t).hidden=t!==S.tab);
+}
+function enterApp(){
+  if(ME.state!=="ok")return;
+  S.entered=true;$("#home").hidden=true;$("#app").hidden=false;
+  applyRoleUI();renderAll();window.scrollTo(0,0);
+}
+function exitApp(){
+  if(S.mode==="live"){signOut();return}
+  S.entered=false;ssSet("demoRole",null);ME.role=null;ME.cabor=[];ME.state="demo";
+  $("#app").hidden=true;$("#home").hidden=false;renderLogin();window.scrollTo(0,0);
+}
+$("#btnOut").addEventListener("click",exitApp);
+
+/* ---------- pengguna & peran (pengelola) ---------- */
+async function loadProfil(){
+  if(S.mode!=="live"||ME.role!=="admin")return;
+  const{data,error}=await S.db.from("profil").select("*").order("dibuat",{ascending:true});
+  if(!error)S.profil=data||[];
+  if(S.tab==="akses")renderAkses();
+}
+const AK={edit:{}};
+function renderAkses(){
+  const el=$("#aList");
+  if(S.mode!=="live"){el.innerHTML='<div class="empty">Pengaturan pengguna aktif setelah aplikasi terhubung ke database.</div>';return}
+  const caborAll=[...new Set(rawData().siswa.map(s=>s.cabor))].sort();
+  const rows=[...S.profil].sort((a,b)=>(a.role==="menunggu"?0:1)-(b.role==="menunggu"?0:1));
+  const pend=rows.filter(r=>r.role==="menunggu").length;
+  $("#aPending").textContent=pend?pend+" akun menunggu persetujuan.":"Tidak ada akun yang menunggu persetujuan.";
+  el.innerHTML='<div class="prow head"><span>Pengguna</span><span>Peran</span><span>Cabor (untuk pelatih)</span><span></span></div>'+(rows.length?"":'<div class="empty">Belum ada pengguna.</div>');
+  rows.forEach(r=>{
+    const st=AK.edit[r.id]||(AK.edit[r.id]={role:r.role,cabor:[...(r.cabor||[])]});
+    const row=document.createElement("div");row.className="prow";if(r.role==="menunggu")row.style.background="var(--amber-bg)";
+    const who=document.createElement("span");who.className="p";const av=document.createElement("span");av.className="avatar";av.style.cssText="width:32px;height:32px;font-size:13px;flex:none";av.textContent=initials(r.nama||r.email||"?");
+    const d=document.createElement("div");const nb=document.createElement("b");nb.textContent=r.nama||"(tanpa nama)";const sm=document.createElement("small");sm.textContent=r.email||"";d.append(nb,sm);who.append(av,d);
+    const sel=document.createElement("select");sel.setAttribute("aria-label","Peran");[["menunggu","Menunggu persetujuan"],["pelatih","Pelatih"],["guru","Guru / wali kelas"],["admin","Pengelola"]].forEach(([v,l])=>{const o=document.createElement("option");o.value=v;o.textContent=l;if(st.role===v)o.selected=true;sel.appendChild(o)});
+    if(r.id===ME.id)sel.disabled=true;
+    sel.onchange=()=>{st.role=sel.value;renderAkses()};
+    const cab=document.createElement("span");cab.className="chips";
+    if(st.role==="pelatih"){if(!caborAll.length)cab.innerHTML='<span class="note">Tambahkan siswa dulu</span>';caborAll.forEach(c=>{const b=document.createElement("button");b.type="button";b.className="chip small";b.textContent=c;b.setAttribute("aria-pressed",st.cabor.includes(c));b.onclick=()=>{st.cabor=st.cabor.includes(c)?st.cabor.filter(x=>x!==c):st.cabor.concat(c);b.setAttribute("aria-pressed",st.cabor.includes(c))};cab.appendChild(b)})}
+    else{const n=document.createElement("span");n.className="sub";n.textContent=st.role==="menunggu"?"–":"Semua cabor";cab.appendChild(n)}
+    const act=document.createElement("span");
+    if(r.id!==ME.id){const sv=document.createElement("button");sv.type="button";sv.className="btn sm";sv.textContent="Simpan";
+      sv.onclick=async()=>{if(st.role==="pelatih"&&!st.cabor.length)return msg("#msgAkses","Pilih minimal satu cabor untuk pelatih.");
+        const{error}=await S.db.from("profil").update({role:st.role,cabor:st.role==="pelatih"?st.cabor:[]}).eq("id",r.id);
+        if(error)return msg("#msgAkses","Gagal menyimpan peran. Pastikan Anda masih berperan sebagai pengelola.");
+        msg("#msgAkses","Peran "+(r.nama||r.email)+" disimpan.",true);delete AK.edit[r.id];loadProfil()};act.appendChild(sv)}
+    else{const n=document.createElement("span");n.className="sub";n.textContent="Akun Anda";act.appendChild(n)}
+    row.append(who,sel,cab,act);el.appendChild(row);
+  });
+}
+
+const rethemer=()=>{if(!S.entered)return;if(S.tab==="atlet")renderAtlet();if(S.tab==="dash")renderDash();if(S.tab==="tes")renderTes();updateSummary();painColor()};
+
+buildInput();
+try{const t=localStorage.getItem("tab");if(t&&["atlet","dash","input","tes","siswa","akses"].includes(t))S.tab=t}catch(_){}
+$("#btnCsv").hidden=false;$("#btnCsvTes").hidden=false;
+renderLogin();
+
+/* ---------- mulai ---------- */
+(async()=>{
+  const configured=CFG.supabaseUrl&&CFG.supabaseAnonKey&&window.supabase&&window.supabase.createClient;
+  if(!configured){
+    S.mode="demo";ME.state="demo";
+    const dr=ssGet("demoRole");
+    if(dr){const[r,c]=dr.split("|");ME.role=r;ME.cabor=c?[c]:[];ME.name="Pengguna contoh";ME.state="ok";enterApp()}else renderLogin();
+    return;
+  }
+  S.db=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});S.mode="live";
+  S.db.auth.onAuthStateChange((ev)=>{if(ev==="PASSWORD_RECOVERY"){LG.mode="reset";LG.info="";ME.state="signedout";S.entered=false;$("#app").hidden=true;$("#home").hidden=false;renderLogin()}});
+  if(/type=recovery/.test(location.hash)){LG.mode="reset";ME.state="signedout";renderLogin();return}
+  try{await afterSignIn(true)}catch(_){ME.state="signedout";renderLogin()}
+})();
+})();
+</script>

@@ -1,0 +1,96 @@
+# Panduan Pemasangan — Monitor Kelas Olahraga
+
+Isi folder:
+
+- `index.html` — aplikasi web (satu file).
+- `setup.sql` — skema database dan aturan akses.
+- `PANDUAN.md` — panduan ini.
+
+Waktu pemasangan sekitar 20–30 menit. Semua layanan di bawah punya paket gratis.
+
+---
+
+## 1. Buat database di Supabase
+
+1. Buka **supabase.com**, daftar, lalu klik **New project**.
+2. Isi nama proyek (misalnya `monitor-kko`), buat password database (simpan baik-baik), dan pilih region **Southeast Asia (Singapore)**.
+3. Tunggu sampai proyek siap (±2 menit).
+4. Buka menu **SQL Editor** → **New query**.
+5. Tempel seluruh isi `setup.sql`, lalu klik **Run**. Pastikan muncul pesan *Success*.
+
+## 2. Hubungkan aplikasi ke database
+
+1. Di Supabase buka **Project Settings → API**.
+2. Salin **Project URL** dan **anon public key**.
+3. Buka `index.html` dengan Notepad atau VS Code, cari bagian `KONFIGURASI`, lalu isi:
+
+```js
+window.MONITOR_CONFIG={
+  supabaseUrl:"https://xxxxxxxx.supabase.co",
+  supabaseAnonKey:"eyJhbGciOi..."
+};
+```
+
+4. Simpan file.
+
+> **Anon key** memang dirancang untuk ditaruh di halaman web, karena data dilindungi aturan akses di database.
+> **Jangan pernah** menaruh *service_role key* di file ini.
+
+## 3. Pasang web di internet (Cloudflare Pages)
+
+1. Daftar atau masuk di **dash.cloudflare.com**.
+2. Buka menu **Workers & Pages**, klik **Create application**, lalu **Get started** dan pilih **Drag and drop your files**.
+3. Isi nama proyek, misalnya `monitor-kko`. Nama ini menjadi alamat web: `monitor-kko.pages.dev`.
+4. Seret **folder** ini (berisi `index.html`) ke kotak unggah, lalu klik **Deploy site**.
+5. Setelah selesai, web bisa dibuka di `https://monitor-kko.pages.dev`.
+
+**Memperbarui web:** buka proyek di Workers & Pages, klik **Create a new deployment**, lalu seret lagi folder yang sudah diperbarui.
+
+**Domain sendiri (opsional):** di proyek, buka tab **Custom domains**, lalu klik **Set up a custom domain**.
+- Kalau domain Anda dikelola di Cloudflare, pengaturannya otomatis.
+- Kalau memakai subdomain sekolah atau kampus (misalnya `monitoring.namasekolah.sch.id`), minta pengelola IT menambahkan **CNAME** yang mengarah ke `monitor-kko.pages.dev`.
+
+## 4. Atur alamat web di Supabase
+
+Langkah ini diperlukan agar tautan konfirmasi email dan lupa kata sandi kembali ke web Anda.
+
+1. Buka Supabase **Authentication → URL Configuration**.
+2. Isi **Site URL** dengan alamat web Anda, misalnya `https://monitor-kko.pages.dev`.
+3. Tambahkan alamat yang sama di **Redirect URLs**.
+
+## 5. Jadikan akun Anda pengelola
+
+1. Buka web Anda, klik **Belum punya akun? Daftar**, lalu daftar dengan email Anda.
+2. Buka email konfirmasi dan klik tautannya.
+3. Di Supabase **SQL Editor**, jalankan perintah ini (ganti emailnya):
+
+```sql
+update public.profil set role = 'admin' where email = 'email-anda@contoh.com';
+```
+
+4. Masuk ke web. Anda sekarang berperan sebagai **Pengelola**.
+
+## 6. Menambahkan pelatih dan guru
+
+1. Minta mereka membuka web dan **Daftar** dengan email masing-masing.
+2. Setelah mereka konfirmasi email, buka tab **Pengguna**. Akun baru muncul di urutan teratas dengan status *menunggu*.
+3. Pilih perannya, lalu klik **Simpan**:
+   - **Pelatih**: pilih juga cabor yang dipegang.
+   - **Guru / wali kelas**: hanya bisa melihat.
+
+Peran diterapkan langsung di database. Pelatih tidak bisa membaca data siswa di luar cabornya, dan guru tidak bisa mengubah data, meskipun mencoba lewat cara lain.
+
+## 7. Supaya sepenuhnya tampil atas nama program Anda
+
+- **Email.** Email konfirmasi dan atur ulang kata sandi dikirim dari pengirim bawaan Supabase, dan jumlahnya dibatasi per jam.
+  - Untuk mengganti pengirim menjadi alamat Anda, atur SMTP sendiri di **Authentication → SMTP Settings**. Bisa memakai email sekolah, Gmail dengan App Password, atau layanan seperti Brevo.
+  - Ubah juga isi email di **Authentication → Email Templates** ke Bahasa Indonesia.
+- **Nama web.** Nama dan teks web bisa diubah langsung di `index.html`, misalnya judul *Monitor Kelas Olahraga*.
+
+## Hal penting lain
+
+- **Proyek gratis bisa dijeda.** Di paket gratis Supabase, proyek yang tidak dipakai beberapa hari bisa dijeda otomatis. Cukup buka dashboard Supabase dan klik *Restore*. Kalau web dipakai setiap hari, ini jarang terjadi.
+- **Cadangan data.** Gunakan tombol **Unduh CSV** (Ringkasan kelas dan Tes fisik) secara berkala. Supabase juga menyediakan ekspor data di **Database → Backups**.
+- **Data contoh.** Sebelum ada siswa yang didaftarkan, dashboard menampilkan 14 siswa contoh. Data contoh itu otomatis hilang begitu siswa pertama ditambahkan.
+- **Mode contoh.** Kalau `index.html` dibuka tanpa konfigurasi, web berjalan dalam mode contoh, berguna untuk demonstrasi.
+- **Siswa di bawah umur.** Data siswa termasuk data pribadi anak. Pastikan ada izin sekolah dan orang tua, serta berikan akses hanya kepada pelatih dan guru yang berhak.
