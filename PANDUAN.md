@@ -1,4 +1,4 @@
-# Panduan Pemasangan — Monitor Kelas Olahraga
+# Panduan Pemasangan — Monitoring Latihan Atlet
 
 Isi folder:
 
@@ -85,7 +85,7 @@ Peran diterapkan langsung di database. Pelatih tidak bisa membaca data siswa di 
 - **Email.** Email konfirmasi dan atur ulang kata sandi dikirim dari pengirim bawaan Supabase, dan jumlahnya dibatasi per jam.
   - Untuk mengganti pengirim menjadi alamat Anda, atur SMTP sendiri di **Authentication → SMTP Settings**. Bisa memakai email sekolah, Gmail dengan App Password, atau layanan seperti Brevo.
   - Ubah juga isi email di **Authentication → Email Templates** ke Bahasa Indonesia.
-- **Nama web.** Nama dan teks web bisa diubah langsung di `index.html`, misalnya judul *Monitor Kelas Olahraga*.
+- **Nama web.** Nama dan teks web bisa diubah langsung di `index.html`, misalnya judul *Monitoring Latihan Atlet*.
 
 ## Hal penting lain
 

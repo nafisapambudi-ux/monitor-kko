@@ -1,5 +1,5 @@
 -- =====================================================================
--- Monitor Kelas Olahraga — skema database
+-- Monitoring Latihan Atlet — skema database
 -- Jalankan sekali di Supabase: SQL Editor → New query → tempel → Run.
 -- =====================================================================
 
